@@ -121,28 +121,39 @@ app.post(SCRAPE, async (req, res) => {
     // Wait for React render
     await page.waitForTimeout(2000)
 
-    // Scroll to trigger lazy-loaded Experience/Education
-    const pageHeight = await page.evaluate(() => document.body.scrollHeight)
-    const steps = Math.ceil(pageHeight / 400)
-    for (let i = 0; i <= steps; i++) {
-      await page.evaluate(pos => window.scrollTo(0, pos), i * 400)
-      await page.waitForTimeout(250)
+    // LinkedIn uses <main> (id="workspace") as the scroll container, NOT document.body
+    // body has overflow:hidden, main has overflow:scroll
+    // Scroll <main> in multiple passes to trigger all lazy-loaded sections
+    let prevHeight = 0
+    for (let pass = 0; pass < 5; pass++) {
+      const height = await page.evaluate(() => {
+        const m = document.querySelector('main')
+        return m ? m.scrollHeight : document.body.scrollHeight
+      })
+      if (height === prevHeight && pass > 0) break
+      prevHeight = height
+      const steps = Math.ceil(height / 300)
+      for (let i = 0; i <= steps; i++) {
+        await page.evaluate(pos => {
+          const m = document.querySelector('main')
+          if (m) m.scrollTop = pos; else window.scrollTo(0, pos)
+        }, i * 300)
+        await page.waitForTimeout(200)
+      }
+      await page.waitForTimeout(2000)
     }
 
-    // Wait for lazy XHR
-    await page.waitForTimeout(2000)
-
-    // Click "Show more" / "See more" to expand bullets and additional roles
+    // Click inline "show more" / "see more" expanders (NOT "show all" navigation links)
     try {
       await page.evaluate(() => {
-        document.querySelectorAll('button, span[role="button"], a[role="button"]').forEach(el => {
+        document.querySelectorAll('button, span[role="button"]').forEach(el => {
           const txt = (el.textContent || '').toLowerCase().replace(/\s+/g, ' ').trim()
-          if (txt.includes('show more') || txt.includes('see more') || txt.includes('show all')) {
+          if ((txt.includes('show more') || txt.includes('see more')) && !txt.includes('show all')) {
             el.click()
           }
         })
       })
-      await page.waitForTimeout(1200)
+      await page.waitForTimeout(1000)
     } catch { /* ignore */ }
 
     // Extract visible text from main content
