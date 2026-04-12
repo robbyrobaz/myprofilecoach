@@ -7,6 +7,7 @@ import ScoreReveal from '@/components/ScoreReveal'
 import InterviewPhase from '@/components/InterviewPhase'
 import SuggestionReview from '@/components/SuggestionReview'
 import OutputPage from '@/components/OutputPage'
+import Nav from '@/components/Nav'
 
 // Isolated component so useSearchParams doesn't block the whole page
 function PaidDetector() {
@@ -58,16 +59,20 @@ export default function SessionPage() {
     return (
       <>
         <Suspense fallback={null}><PaidDetector /></Suspense>
-        <Spinner message="Loading your session..." />
+        <Nav />
+        <div className="pt-16"><Spinner message="Loading your session..." /></div>
       </>
     )
   }
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <p className="text-slate-400">Session not found. <a href="/" className="text-indigo-400 underline">Start over</a></p>
-      </div>
+      <>
+        <Nav />
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center pt-16">
+          <p className="text-slate-400">Session not found. <a href="/" className="text-indigo-400 underline">Start over</a></p>
+        </div>
+      </>
     )
   }
 
@@ -99,7 +104,8 @@ export default function SessionPage() {
   return (
     <>
       <Suspense fallback={null}><PaidDetector /></Suspense>
-      {content}
+      <Nav />
+      <div className="pt-16">{content}</div>
     </>
   )
 }

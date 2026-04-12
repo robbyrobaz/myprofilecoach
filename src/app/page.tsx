@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
+import Nav from '@/components/Nav'
 
 // Bookmarklet code — runs on linkedin.com, copies profile text to clipboard
 const BOOKMARKLET_CODE = `(function(){var m=document.querySelector('main')||document.body;var c=m.cloneNode(true);c.querySelectorAll('script,style,nav,header,button,[aria-hidden="true"]').forEach(function(e){e.remove();});var t=(c.innerText||c.textContent||'').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim();if(!t){alert('Could not read profile. Try selecting all text manually (Ctrl+A) then copying.');return;}function fb(){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');alert('Profile copied! Return to myprofilecoach.com and paste it.');}catch(e){alert('Please manually copy the text on this page.');}document.body.removeChild(ta);}if(navigator&&navigator.clipboard){navigator.clipboard.writeText(t).then(function(){alert('Profile copied! Return to myprofilecoach.com and paste it.');}).catch(fb);}else{fb();}})();`
@@ -259,21 +259,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-[#0a0a0f] text-white">
 
       {/* NAV */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 backdrop-blur-xl bg-black/40">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Image src="/logo-final.png" alt="My Profile Coach" width={40} height={40} className="rounded-xl" />
-            <span className="text-white font-semibold text-2xl tracking-tight">My Profile Coach</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <a href="#how-it-works" className="text-sm text-slate-400 hover:text-white transition-colors hidden sm:block">How it works</a>
-            <a href="#pricing" className="text-sm text-slate-400 hover:text-white transition-colors hidden sm:block">Pricing</a>
-            <a href="#score-form" className="h-9 px-5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold transition-all flex items-center">
-              Get started free
-            </a>
-          </div>
-        </div>
-      </nav>
+      <Nav showHomeLinks />
 
       {/* HERO */}
       <section
