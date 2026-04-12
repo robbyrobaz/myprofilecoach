@@ -1,14 +1,25 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import Nav from '@/components/Nav'
 
-// Bookmarklet code — runs on linkedin.com, copies profile text to clipboard
-const BOOKMARKLET_CODE = `(function(){var m=document.querySelector('main')||document.body;var c=m.cloneNode(true);c.querySelectorAll('script,style,nav,header,button,[aria-hidden="true"]').forEach(function(e){e.remove();});var t=(c.innerText||c.textContent||'').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim();if(!t){alert('Could not read profile. Try selecting all text manually (Ctrl+A) then copying.');return;}function fb(){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');alert('Profile copied! Return to myprofilecoach.com and paste it.');}catch(e){alert('Please manually copy the text on this page.');}document.body.removeChild(ta);}if(navigator&&navigator.clipboard){navigator.clipboard.writeText(t).then(function(){alert('Profile copied! Return to myprofilecoach.com and paste it.');}).catch(fb);}else{fb();}})();`
+// Bookmarklet — runs on linkedin.com, scrolls/expands profile, opens MPC in new tab,
+// sends profile text via postMessage (bypasses CSP/CORS entirely).
+const BOOKMARKLET_CODE = `(async function(){var d=document.createElement('div');d.style.cssText='position:fixed;top:16px;right:16px;background:#0a66c2;color:#fff;padding:11px 18px;border-radius:9px;font-size:13px;font-weight:600;z-index:2147483647;font-family:-apple-system,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.45)';d.textContent='Reading your profile\u2026';document.body.appendChild(d);var sh=document.body.scrollHeight;for(var y=0;y<=sh;y+=500){window.scrollTo(0,y);await new Promise(function(r){setTimeout(r,100)})}window.scrollTo(0,0);await new Promise(function(r){setTimeout(r,600)});document.querySelectorAll('button,span[role="button"]').forEach(function(el){var t=(el.textContent||'').toLowerCase().replace(/\\s+/g,' ').trim();if(t.indexOf('show more')>=0||t.indexOf('see more')>=0||t.indexOf('show all')>=0)try{el.click()}catch(e){}});await new Promise(function(r){setTimeout(r,800)});var main=document.querySelector('main')||document.body;var clone=main.cloneNode(true);clone.querySelectorAll('script,style,nav,header,button,svg').forEach(function(n){n.remove()});var text=(clone.innerText||clone.textContent||'').replace(/[ \\t]+/g,' ').replace(/\\n{3,}/g,'\\n\\n').trim();if(text.length<200){d.style.background='#dc2626';d.textContent='Could not read profile \u2014 are you on a LinkedIn profile page?';setTimeout(function(){d.remove()},4000);return;}d.textContent='Opening My Profile Coach\u2026';var win=window.open('https://myprofilecoach.com/?bm=1','mpc_tab');if(!win){try{await navigator.clipboard.writeText(text);d.textContent='Copied! Paste at myprofilecoach.com';}catch(e){d.style.background='#dc2626';d.textContent='Allow popups from LinkedIn and try again';}setTimeout(function(){d.remove()},5000);return;}var n=0;function send(){if(n++>12)return;try{win.postMessage({type:'mpc-import',text:text},'https://myprofilecoach.com');}catch(e){}setTimeout(send,500);}setTimeout(send,1500);setTimeout(function(){d.remove()},9000);})();`
+
+// Module-level message buffer — catches postMessage events that arrive before React mounts
+if (typeof window !== 'undefined') {
+  (window as Window & { __mpc_import?: string }).__mpc_import = undefined
+  window.addEventListener('message', function (e) {
+    if (e.data?.type === 'mpc-import' && typeof e.data.text === 'string' && e.data.text.length > 100) {
+      ;(window as Window & { __mpc_import?: string }).__mpc_import = e.data.text
+    }
+  })
+}
 
 function BookmarkletHelper() {
   const linkRef = React.useRef<HTMLAnchorElement>(null)
@@ -21,12 +32,11 @@ function BookmarkletHelper() {
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-      <p className="text-sm font-medium text-slate-300">Desktop shortcut (optional)</p>
+      <p className="text-sm font-medium text-slate-300">One-click import from LinkedIn</p>
       <ol className="text-xs text-slate-400 space-y-1.5 list-decimal list-inside">
         <li>Drag the button below to your bookmarks bar</li>
-        <li>Open your LinkedIn profile</li>
-        <li>Click the bookmark — it copies your profile</li>
-        <li>Come back here and paste</li>
+        <li>Go to your LinkedIn profile page</li>
+        <li>Click the bookmark — My Profile Coach opens with your profile loaded automatically</li>
       </ol>
       <div className="flex items-center gap-3">
         <a
@@ -37,9 +47,9 @@ function BookmarkletHelper() {
           className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600/20 border border-indigo-500/40 px-3 py-1.5 text-xs font-medium text-indigo-300 hover:bg-indigo-600/30 cursor-grab active:cursor-grabbing select-none"
         >
           <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 3a4 4 0 110 8 4 4 0 010-8zm0 10c-4 0-6 2-6 3v1h12v-1c0-1-2-3-6-3z"/></svg>
-          Copy LinkedIn Profile
+          Import LinkedIn Profile
         </a>
-        <span className="text-xs text-slate-500">← drag this to your bookmarks bar</span>
+        <span className="text-xs text-slate-500">← drag to bookmarks bar</span>
       </div>
     </div>
   )
@@ -57,6 +67,31 @@ function HeroForm() {
   const [loadingMsg, setLoadingMsg] = useState('')
   const [error, setError] = useState('')
   const [showBookmarklet, setShowBookmarklet] = useState(false)
+  const [imported, setImported] = useState(false)
+
+  // Receive profile text from bookmarklet via postMessage
+  useEffect(() => {
+    // Check if text arrived before React mounted (stored in module-level buffer)
+    const win = window as Window & { __mpc_import?: string }
+    if (win.__mpc_import) {
+      setProfileText(win.__mpc_import)
+      setMode('paste')
+      setImported(true)
+      setShowBookmarklet(false)
+      win.__mpc_import = undefined
+    }
+
+    function handleMessage(e: MessageEvent) {
+      if (e.data?.type === 'mpc-import' && typeof e.data.text === 'string' && e.data.text.length > 100) {
+        setProfileText(e.data.text)
+        setMode('paste')
+        setImported(true)
+        setShowBookmarklet(false)
+      }
+    }
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -164,6 +199,12 @@ function HeroForm() {
               {showBookmarklet ? 'Hide helper' : 'Desktop shortcut ↗'}
             </button>
           </div>
+          {imported && (
+            <div className="mb-3 flex items-center gap-2 rounded-lg bg-green-500/10 border border-green-500/25 px-3 py-2 text-xs text-green-400">
+              <svg className="h-3.5 w-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd"/></svg>
+              Profile imported from LinkedIn — just enter your target role below
+            </div>
+          )}
           {showBookmarklet && <div className="mb-3"><BookmarkletHelper /></div>}
           <Textarea
             value={profileText}

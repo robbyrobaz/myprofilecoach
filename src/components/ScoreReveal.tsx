@@ -181,7 +181,11 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
   }
 
   async function handleStartInterview() {
-    const userEmail = email || localStorage.getItem('mpc_email') || 'test@test.com'
+    const userEmail = email || localStorage.getItem('mpc_email')
+    if (!userEmail) {
+      setError('Please enter your email address to continue.')
+      return
+    }
     setInterviewLoading(true)
     setError('')
     try {
@@ -378,6 +382,15 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
             ) : (
               <div className="text-center space-y-3">
                 <p className="text-slate-400 text-sm">You have an active subscription.</p>
+                {!email && (
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
+                  />
+                )}
                 <Button
                   onClick={handleStartInterview}
                   className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base"

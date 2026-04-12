@@ -22,7 +22,8 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'No subscription found for that email address.' }, { status: 404 })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_URL ?? 'http://localhost:3000'
+    const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
+    const appUrl = process.env.NEXT_PUBLIC_URL ?? vercelUrl ?? 'http://localhost:3000'
     const stripe = getStripe()
 
     const portalSession = await stripe.billingPortal.sessions.create({

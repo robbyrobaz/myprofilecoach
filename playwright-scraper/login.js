@@ -1,36 +1,47 @@
 /**
- * Run this once to log into LinkedIn with Camoufox (Firefox-based anti-detection browser)
- * and save the session cookies for the scraper.
+ * Run this once to log into LinkedIn with a stealth Chrome profile.
+ * The session is saved to ./chrome-profile/ and reused by server.js.
  *
- * Usage: node login.js
+ * Usage:
+ *   DISPLAY=:0 node login.js
+ *
  * After you log in and see your feed, press Enter to save and exit.
  */
 
-const { firefox } = require('playwright-core')
-const { launchOptions } = require('/home/rob/.hermes/hermes-agent/node_modules/camoufox-js/dist/index.js')
-const fs = require('fs')
+const puppeteer = require('puppeteer-extra')
+const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 const path = require('path')
 const readline = require('readline')
 
-const COOKIES_FILE = path.join(__dirname, 'linkedin-cookies.json')
+puppeteer.use(StealthPlugin())
+
+const PROFILE_DIR = path.join(__dirname, 'chrome-profile')
+const CHROMIUM_PATH = process.env.CHROMIUM_PATH || '/snap/bin/chromium'
 
 async function main() {
-  console.log('Launching Camoufox browser — log into LinkedIn, then press Enter here to save session...\n')
+  console.log('Launching Chrome with stealth — log into LinkedIn, then press Enter here...\n')
 
-  // headless: false so you can visually log in
-  const opts = await launchOptions({ headless: false })
-  const browser = await firefox.launch(opts)
+  const browser = await puppeteer.launch({
+    executablePath: CHROMIUM_PATH,
+    headless: false,
+    userDataDir: PROFILE_DIR,
+    args: [
+      '--no-sandbox',
+      '--disable-dev-shm-usage',
+      '--window-size=1280,900',
+    ],
+    defaultViewport: { width: 1280, height: 900 },
+  })
 
-  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } })
-
-  const page = await context.newPage()
-  await page.goto('https://www.linkedin.com/login')
+  const page = await browser.newPage()
+  await page.goto('https://www.linkedin.com/login', { waitUntil: 'load' })
 
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
   await new Promise(resolve => rl.question('\nPress Enter after you have logged in successfully... ', resolve))
   rl.close()
 
-  const cookies = await context.cookies()
+  // Verify session cookie exists
+  const cookies = await page.cookies('https://www.linkedin.com')
   const hasAuth = cookies.some(c => c.name === 'li_at')
 
   if (!hasAuth) {
@@ -39,8 +50,7 @@ async function main() {
     process.exit(1)
   }
 
-  fs.writeFileSync(COOKIES_FILE, JSON.stringify(cookies, null, 2))
-  console.log(`\nSession saved to ${COOKIES_FILE} (${cookies.length} cookies)`)
+  console.log(`\nSession saved in ${PROFILE_DIR}/ (${cookies.length} cookies)`)
   console.log('You can now run: node server.js')
 
   await browser.close()

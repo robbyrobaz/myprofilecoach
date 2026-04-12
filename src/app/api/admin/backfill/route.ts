@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
       if (session.suggestionCards?.length) {
         const answersCost = session.metrics?.calls
-          .filter(c => c.step === 'processAnswers' || c.step === 'generateCards')
+          .filter(c => c.step === 'processAnswers' || c.step === 'generateSuggestionCards')
           .reduce((sum, c) => sum + c.costUsd, 0) ?? 0
         await incrStat('suggestions', answersCost)
         results.suggestions++

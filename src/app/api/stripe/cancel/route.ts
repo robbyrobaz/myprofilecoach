@@ -97,9 +97,12 @@ Return JSON:
 
         const raw = msg.content[0].type === 'text' ? msg.content[0].text : ''
         const match = raw.match(/```json\n?([\s\S]*?)\n?```/) || raw.match(/(\{[\s\S]*\})/)
-        const parsed = JSON.parse(match ? match[1] : raw) as {
-          message: string
-          offerType: 'pause' | 'discount' | null
+        let parsed: { message: string; offerType: 'pause' | 'discount' | null }
+        try {
+          parsed = JSON.parse(match ? match[1] : raw)
+        } catch {
+          logger.error('/api/stripe/cancel', 'failed to parse Claude JSON response', { raw: raw.slice(0, 200) })
+          throw new Error('Failed to parse cancel response from AI')
         }
 
         let offer: SaveOffer | null = null

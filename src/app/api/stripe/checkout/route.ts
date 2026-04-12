@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Stripe price not configured' }, { status: 500 })
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_URL ?? 'http://localhost:3000'
+    const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
+    const appUrl = process.env.NEXT_PUBLIC_URL ?? vercelUrl ?? 'http://localhost:3000'
 
     // After payment, redirect back to the session so the flow continues
     const successUrl = sessionId

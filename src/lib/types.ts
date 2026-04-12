@@ -41,10 +41,18 @@ export interface ParsedRole {
   rawText: string
 }
 
+export interface ParsedEducation {
+  school: string
+  degree: string
+  year: string
+}
+
 export interface ParsedProfile {
+  name?: string
   headline: string
   about: string
   roles: ParsedRole[]
+  education?: ParsedEducation[]
   skills: string[]
   rawText: string
 }

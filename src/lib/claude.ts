@@ -89,9 +89,11 @@ ${rawProfile}
 
 Return JSON matching this shape:
 {
-  "headline": "string",
+  "name": "string (person's full name if visible at the top of the profile, otherwise empty string)",
+  "headline": "string (job title / tagline — NOT the person's name)",
   "about": "string",
   "roles": [{ "company": "string", "title": "string", "startDate": "string", "endDate": "string", "bullets": ["string"], "rawText": "string" }],
+  "education": [{ "school": "string", "degree": "string", "year": "string" }],
   "skills": ["string"],
   "rawText": "string"
 }
@@ -211,7 +213,7 @@ Return JSON: { "achievements": ["string"] }`
     }]
   })
   const parsed = jsonResponse<{ achievements: string[] }>(text)
-  return { result: parsed.achievements.join('\n'), log }
+  return { result: (parsed.achievements ?? []).join('\n'), log }
 }
 
 // Calls 9-12: Generate suggestion cards
@@ -223,7 +225,7 @@ export async function generateSuggestionCards(
 ): Promise<{ result: SuggestionCard[]; log: ClaudeCallLog }> {
   const { text, log } = await claudeCall('generateSuggestionCards', {
     model: MODEL,
-    max_tokens: 4096,
+    max_tokens: 8192,
     system: SYSTEM_PROMPT,
     messages: [{
       role: 'user',
@@ -267,7 +269,7 @@ export async function finalizeOutput(
 
   const { text, log } = await claudeCall('finalizeOutput', {
     model: MODEL,
-    max_tokens: 4096,
+    max_tokens: 8192,
     system: SYSTEM_PROMPT,
     messages: [{
       role: 'user',
