@@ -49,26 +49,70 @@ function ScorePreview() {
   )
 }
 
+type InputMode = 'url' | 'paste'
+
 function HeroForm() {
   const router = useRouter()
+  const [mode, setMode] = useState<InputMode>('url')
+  const [linkedinUrl, setLinkedinUrl] = useState('')
   const [profileText, setProfileText] = useState('')
   const [targetRole, setTargetRole] = useState('')
   const [loading, setLoading] = useState(false)
+  const [fetchingUrl, setFetchingUrl] = useState(false)
   const [error, setError] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!profileText.trim() || !targetRole.trim()) {
-      setError('Please paste your LinkedIn profile and enter a target role.')
-      return
-    }
     setError('')
-    setLoading(true)
+
+    let text = profileText
+
+    if (mode === 'url') {
+      if (!linkedinUrl.trim()) {
+        setError('Please enter your LinkedIn profile URL.')
+        return
+      }
+      if (!targetRole.trim()) {
+        setError('Please enter a target role.')
+        return
+      }
+      setFetchingUrl(true)
+      setLoading(true)
+      try {
+        const res = await fetch('/api/fetch-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: linkedinUrl.trim() }),
+        })
+        const data = await res.json().catch(() => ({})) as { profileText?: string; error?: string }
+        if (!res.ok || !data.profileText) {
+          throw new Error(data.error ?? 'Could not fetch your LinkedIn profile. Please paste your profile text manually.')
+        }
+        text = data.profileText
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Could not fetch profile. Try pasting it manually.')
+        setLoading(false)
+        setFetchingUrl(false)
+        return
+      }
+      setFetchingUrl(false)
+    } else {
+      if (!profileText.trim()) {
+        setError('Please paste your LinkedIn profile text.')
+        return
+      }
+      if (!targetRole.trim()) {
+        setError('Please enter a target role.')
+        return
+      }
+      setLoading(true)
+    }
+
     try {
       const res = await fetch('/api/score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileText, targetRoles: [targetRole] }),
+        body: JSON.stringify({ profileText: text, targetRoles: [targetRole] }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -84,18 +128,64 @@ function HeroForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
-          Paste your LinkedIn profile text
-        </label>
-        <Textarea
-          value={profileText}
-          onChange={(e) => setProfileText(e.target.value)}
-          placeholder="Copy everything from your LinkedIn profile — headline, about, experience bullets, skills — and paste it here..."
-          className="min-h-40 max-h-56 overflow-y-auto bg-slate-800/50 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20 resize-none"
+      {/* Mode toggle */}
+      <div className="flex rounded-lg border border-slate-600 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => { setMode('url'); setError('') }}
+          className={`flex-1 py-2 text-sm font-medium transition-colors ${
+            mode === 'url'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-slate-800/50 text-slate-400 hover:text-slate-200'
+          }`}
           disabled={loading}
-        />
+        >
+          LinkedIn URL
+        </button>
+        <button
+          type="button"
+          onClick={() => { setMode('paste'); setError('') }}
+          className={`flex-1 py-2 text-sm font-medium transition-colors ${
+            mode === 'paste'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-slate-800/50 text-slate-400 hover:text-slate-200'
+          }`}
+          disabled={loading}
+        >
+          Paste text
+        </button>
       </div>
+
+      {mode === 'url' ? (
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            Your LinkedIn profile URL
+          </label>
+          <Input
+            value={linkedinUrl}
+            onChange={(e) => setLinkedinUrl(e.target.value)}
+            placeholder="https://www.linkedin.com/in/your-name"
+            type="url"
+            className="h-11 bg-slate-800/50 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20"
+            disabled={loading}
+          />
+          <p className="text-xs text-slate-500 mt-1.5">Make sure your profile is set to public on LinkedIn.</p>
+        </div>
+      ) : (
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            Paste your LinkedIn profile text
+          </label>
+          <Textarea
+            value={profileText}
+            onChange={(e) => setProfileText(e.target.value)}
+            placeholder="Copy everything from your LinkedIn profile — headline, about, experience bullets, skills — and paste it here..."
+            className="min-h-40 max-h-56 overflow-y-auto bg-slate-800/50 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20 resize-none"
+            disabled={loading}
+          />
+        </div>
+      )}
+
       <div>
         <label className="block text-sm font-medium text-slate-300 mb-2">
           What role are you targeting?
@@ -108,9 +198,11 @@ function HeroForm() {
           disabled={loading}
         />
       </div>
+
       {error && (
         <p className="text-sm text-red-400">{error}</p>
       )}
+
       <Button
         type="submit"
         disabled={loading}
@@ -122,7 +214,7 @@ function HeroForm() {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-            Analyzing your profile... (5–10 sec)
+            {fetchingUrl ? 'Fetching your profile...' : 'Analyzing your profile... (5–10 sec)'}
           </span>
         ) : (
           'Get my free score →'
