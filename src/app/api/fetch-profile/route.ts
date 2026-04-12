@@ -1,6 +1,9 @@
 import { NextRequest } from 'next/server'
 import { logger } from '@/lib/logger'
 
+const SCRAPER_URL = process.env.LINKEDIN_SCRAPER_URL // e.g. https://omen-claw.tail76e7df.ts.net/linkedin-scraper
+const SCRAPER_TOKEN = process.env.LINKEDIN_SCRAPER_TOKEN
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -22,45 +25,39 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Only LinkedIn profile URLs are supported' }, { status: 400 })
     }
 
-    logger.info('/api/fetch-profile', 'fetching profile', { url })
+    if (!SCRAPER_URL || !SCRAPER_TOKEN) {
+      logger.warn('/api/fetch-profile', 'scraper not configured')
+      return Response.json(
+        { error: 'LinkedIn scraping is not configured. Please paste your profile text manually.' },
+        { status: 503 }
+      )
+    }
 
-    // Use Jina AI Reader — converts any URL to clean markdown, no API key needed
-    const jinaUrl = `https://r.jina.ai/${url}`
-    const res = await fetch(jinaUrl, {
+    logger.info('/api/fetch-profile', 'calling playwright scraper', { url })
+
+    const res = await fetch(`${SCRAPER_URL}/scrape`, {
+      method: 'POST',
       headers: {
-        'Accept': 'text/plain',
-        'X-Return-Format': 'text',
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SCRAPER_TOKEN}`,
       },
-      signal: AbortSignal.timeout(15000),
+      body: JSON.stringify({ url }),
+      signal: AbortSignal.timeout(45000), // Playwright can take ~30s
     })
 
-    if (!res.ok) {
-      logger.warn('/api/fetch-profile', 'jina fetch failed', { status: res.status })
+    const data = await res.json().catch(() => ({})) as { profileText?: string; error?: string }
+
+    if (!res.ok || !data.profileText) {
+      logger.warn('/api/fetch-profile', 'scraper returned error', { status: res.status, error: data.error })
       return Response.json(
-        { error: 'Could not fetch your LinkedIn profile. Please paste your profile text manually.' },
+        { error: data.error ?? 'Could not fetch your LinkedIn profile. Please paste it manually.' },
         { status: 422 }
       )
     }
 
-    const text = await res.text()
+    logger.info('/api/fetch-profile', 'profile fetched successfully', { length: data.profileText.length })
+    return Response.json({ profileText: data.profileText })
 
-    if (!text || text.trim().length < 100) {
-      logger.warn('/api/fetch-profile', 'jina returned too little content', { length: text?.length })
-      return Response.json(
-        { error: 'LinkedIn returned too little content. Make sure your profile is public, or paste your profile text manually.' },
-        { status: 422 }
-      )
-    }
-
-    // Strip Jina preamble (first line is usually "Title: ..." or "URL: ...")
-    const cleaned = text
-      .replace(/^(Title|URL|Description):.*\n/gm, '')
-      .replace(/^\s*\n/gm, '\n')
-      .trim()
-
-    logger.info('/api/fetch-profile', 'profile fetched successfully', { length: cleaned.length })
-
-    return Response.json({ profileText: cleaned })
   } catch (err) {
     logger.error('/api/fetch-profile', 'fetch failed', err)
     return Response.json(

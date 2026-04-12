@@ -88,31 +88,58 @@ function BookmarkletHelper() {
   )
 }
 
+type InputMode = 'url' | 'paste'
+
 function HeroForm() {
   const router = useRouter()
+  const [mode, setMode] = useState<InputMode>('url')
+  const [linkedinUrl, setLinkedinUrl] = useState('')
   const [profileText, setProfileText] = useState('')
   const [targetRole, setTargetRole] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loadingMsg, setLoadingMsg] = useState('')
   const [error, setError] = useState('')
   const [showBookmarklet, setShowBookmarklet] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!profileText.trim()) {
-      setError('Please paste your LinkedIn profile text.')
-      return
-    }
-    if (!targetRole.trim()) {
-      setError('Please enter a target role.')
-      return
-    }
     setError('')
-    setLoading(true)
+
+    let text = profileText
+
+    if (mode === 'url') {
+      if (!linkedinUrl.trim()) { setError('Please enter your LinkedIn profile URL.'); return }
+      if (!targetRole.trim()) { setError('Please enter a target role.'); return }
+      setLoading(true)
+      setLoadingMsg('Fetching your LinkedIn profile...')
+      try {
+        const res = await fetch('/api/fetch-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: linkedinUrl.trim() }),
+        })
+        const data = await res.json().catch(() => ({})) as { profileText?: string; error?: string }
+        if (!res.ok || !data.profileText) {
+          throw new Error(data.error ?? 'Could not fetch your LinkedIn profile. Please paste it manually.')
+        }
+        text = data.profileText
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Could not fetch profile. Try pasting it manually.')
+        setLoading(false)
+        return
+      }
+    } else {
+      if (!profileText.trim()) { setError('Please paste your LinkedIn profile text.'); return }
+      if (!targetRole.trim()) { setError('Please enter a target role.'); return }
+      setLoading(true)
+    }
+
+    setLoadingMsg('Analyzing your profile... (10–20 sec)')
     try {
       const res = await fetch('/api/score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileText, targetRoles: [targetRole] }),
+        body: JSON.stringify({ profileText: text, targetRoles: [targetRole] }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
@@ -128,42 +155,64 @@ function HeroForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium text-slate-300">
-            Paste your LinkedIn profile
-          </label>
-          <button
-            type="button"
-            onClick={() => setShowBookmarklet(v => !v)}
-            className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
-          >
-            {showBookmarklet ? 'Hide helper' : 'Desktop shortcut ↗'}
-          </button>
-        </div>
-
-        {showBookmarklet && (
-          <div className="mb-3">
-            <BookmarkletHelper />
-          </div>
-        )}
-
-        <Textarea
-          value={profileText}
-          onChange={(e) => setProfileText(e.target.value)}
-          placeholder="Open your LinkedIn profile → select all text → copy → paste here. Don't worry about formatting — our AI handles the noise."
-          className="min-h-40 max-h-56 overflow-y-auto bg-slate-800/50 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20 resize-none"
+      {/* Mode toggle */}
+      <div className="flex rounded-lg border border-slate-600 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => { setMode('url'); setError('') }}
+          className={`flex-1 py-2 text-sm font-medium transition-colors ${mode === 'url' ? 'bg-indigo-600 text-white' : 'bg-slate-800/50 text-slate-400 hover:text-slate-200'}`}
           disabled={loading}
-        />
-        <p className="text-xs text-slate-500 mt-1.5">
-          On mobile: open linkedin.com in your browser → tap your profile → select all → copy.
-        </p>
+        >
+          LinkedIn URL
+        </button>
+        <button
+          type="button"
+          onClick={() => { setMode('paste'); setError('') }}
+          className={`flex-1 py-2 text-sm font-medium transition-colors ${mode === 'paste' ? 'bg-indigo-600 text-white' : 'bg-slate-800/50 text-slate-400 hover:text-slate-200'}`}
+          disabled={loading}
+        >
+          Paste text
+        </button>
       </div>
 
+      {mode === 'url' ? (
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-2">Your LinkedIn profile URL</label>
+          <Input
+            value={linkedinUrl}
+            onChange={(e) => setLinkedinUrl(e.target.value)}
+            placeholder="https://www.linkedin.com/in/your-name"
+            type="url"
+            className="h-11 bg-slate-800/50 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20"
+            disabled={loading}
+          />
+        </div>
+      ) : (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-slate-300">Paste your LinkedIn profile</label>
+            <button
+              type="button"
+              onClick={() => setShowBookmarklet(v => !v)}
+              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+            >
+              {showBookmarklet ? 'Hide helper' : 'Desktop shortcut ↗'}
+            </button>
+          </div>
+          {showBookmarklet && <div className="mb-3"><BookmarkletHelper /></div>}
+          <Textarea
+            value={profileText}
+            onChange={(e) => setProfileText(e.target.value)}
+            placeholder="Copy everything from your LinkedIn profile — headline, about, experience bullets, skills — and paste it here..."
+            className="min-h-40 max-h-56 overflow-y-auto bg-slate-800/50 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20 resize-none"
+            disabled={loading}
+          />
+          <p className="text-xs text-slate-500 mt-1.5">On mobile: open linkedin.com in browser → your profile → select all → copy.</p>
+        </div>
+      )}
+
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
-          What role are you targeting?
-        </label>
+        <label className="block text-sm font-medium text-slate-300 mb-2">What role are you targeting?</label>
         <Input
           value={targetRole}
           onChange={(e) => setTargetRole(e.target.value)}
@@ -173,9 +222,7 @@ function HeroForm() {
         />
       </div>
 
-      {error && (
-        <p className="text-sm text-red-400">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-400">{error}</p>}
 
       <Button
         type="submit"
@@ -188,7 +235,7 @@ function HeroForm() {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-            Analyzing your profile... (10–20 sec)
+            {loadingMsg}
           </span>
         ) : (
           'Get my free score →'
