@@ -1,15 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { ParsedProfile, ProfileScore, InterviewQuestion, SuggestionCard, FinalizedOutput } from './types'
 
+// SDK reads ANTHROPIC_API_KEY, ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN from env automatically.
+// For MiniMax: set ANTHROPIC_API_KEY=<minimax key>, ANTHROPIC_BASE_URL=https://api.minimax.io/anthropic
 function getClient() {
-  const baseURL = process.env.ANTHROPIC_BASE_URL
-  // When using an alternate backend (e.g. MiniMax), MINIMAX_API_KEY holds that key.
-  // We pass authToken: null explicitly so the SDK doesn't read ANTHROPIC_AUTH_TOKEN
-  // and send "Authorization: Bearer" — MiniMax only accepts "x-api-key".
-  const apiKey = baseURL
-    ? (process.env.MINIMAX_API_KEY ?? process.env.ANTHROPIC_API_KEY)
-    : process.env.ANTHROPIC_API_KEY
-  return new Anthropic({ apiKey, authToken: null, ...(baseURL ? { baseURL } : {}) })
+  return new Anthropic()
 }
 const MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6'
 
