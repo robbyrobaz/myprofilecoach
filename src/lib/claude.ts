@@ -279,7 +279,8 @@ ${parsedProfile.roles.map((r, i) => `ROLE ${i} (${r.title} @ ${r.company}): ${r.
 Approved changes to apply:
 ${approvedChanges || '(user kept all original text)'}
 
-Return the complete finalized profile as JSON with a new score estimate:
+Return the complete finalized profile as JSON with a new score estimate.
+IMPORTANT: Include ALL roles from the original profile in the output — not just the ones with approved changes. Apply approved changes to the relevant roles, keep original bullets for roles that had no changes.
 {
   "headline": "string",
   "about": "string",

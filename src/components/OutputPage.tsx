@@ -10,6 +10,14 @@ interface Props {
   sessionId: string
 }
 
+function stripMd(text: string): string {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .trim()
+}
+
 function FeedbackWidget({ sessionId }: { sessionId: string }) {
   const [open, setOpen] = useState(false)
   const [message, setMessage] = useState('')
@@ -160,7 +168,7 @@ export default function OutputPage({ output, sessionId }: Props) {
 
   const allText = [
     `HEADLINE\n${output.headline}`,
-    `\nABOUT\n${output.about}`,
+    `\nABOUT\n${stripMd(output.about)}`,
     ...output.roles.map(r =>
       `\n${r.title.toUpperCase()} — ${r.company.toUpperCase()}\n${r.bullets.map(b => `• ${b}`).join('\n')}`
     ),
@@ -228,10 +236,10 @@ export default function OutputPage({ output, sessionId }: Props) {
         {/* Tabs */}
         <Tabs defaultValue="linkedin" className="w-full">
           <TabsList className="w-full bg-slate-800 border border-slate-700">
-            <TabsTrigger value="linkedin" className="flex-1 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
+            <TabsTrigger value="linkedin" className="flex-1 data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-slate-300 data-[state=inactive]:text-slate-300">
               LinkedIn Profile
             </TabsTrigger>
-            <TabsTrigger value="resume" className="flex-1 data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
+            <TabsTrigger value="resume" className="flex-1 data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-slate-300 data-[state=inactive]:text-slate-300">
               Resume PDF
             </TabsTrigger>
           </TabsList>
@@ -265,10 +273,10 @@ export default function OutputPage({ output, sessionId }: Props) {
                   <div className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">About / Summary</span>
                 </div>
-                <CopyButton text={output.about} />
+                <CopyButton text={stripMd(output.about)} />
               </div>
               <div className="px-5 py-4 text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">
-                {output.about}
+                {stripMd(output.about)}
               </div>
             </div>
 
