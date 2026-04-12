@@ -216,10 +216,12 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
             </div>
 
             {/* Reason */}
-            <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-3">
-              <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Why this matters</p>
-              <p className="text-sm text-slate-300 leading-relaxed">{current.reason}</p>
-            </div>
+            {current.reason && (
+              <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-3">
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Why this matters</p>
+                <p className="text-sm text-slate-300 leading-relaxed">{current.reason}</p>
+              </div>
+            )}
 
             {/* Action buttons */}
             {!editing && (
@@ -233,7 +235,7 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
                 <Button
                   onClick={handleEdit}
                   variant="outline"
-                  className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700 rounded-xl"
+                  className="flex-1 border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white rounded-xl"
                 >
                   ✎ Edit
                 </Button>

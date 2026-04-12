@@ -60,6 +60,9 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     logger.error('/api/score', 'scoring failed', err)
-    return Response.json({ error: msg.slice(0, 300) }, { status: 500 })
+    if (msg.includes('credit') || msg.includes('billing') || msg.includes('quota')) {
+      return Response.json({ error: 'API billing issue. Please try again later.' }, { status: 503 })
+    }
+    return Response.json({ error: 'Something went wrong scoring your profile. Please try again.' }, { status: 500 })
   }
 }
