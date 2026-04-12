@@ -1,10 +1,13 @@
 /**
- * Run this once to log into LinkedIn and save session cookies.
+ * Run this once to log into LinkedIn with Camoufox (Firefox-based anti-detection browser)
+ * and save the session cookies for the scraper.
+ *
  * Usage: node login.js
  * After you log in and see your feed, press Enter to save and exit.
  */
 
-const { chromium } = require('playwright-core')
+const { firefox } = require('playwright-core')
+const { launchOptions } = require('/home/rob/.hermes/hermes-agent/node_modules/camoufox-js/dist/index.js')
 const fs = require('fs')
 const path = require('path')
 const readline = require('readline')
@@ -12,27 +15,21 @@ const readline = require('readline')
 const COOKIES_FILE = path.join(__dirname, 'linkedin-cookies.json')
 
 async function main() {
-  console.log('Launching browser — log into LinkedIn, then press Enter here to save session...\n')
+  console.log('Launching Camoufox browser — log into LinkedIn, then press Enter here to save session...\n')
 
-  const browser = await chromium.launch({
-    executablePath: '/snap/bin/chromium',
-    headless: false, // visible so you can log in
-  })
+  // headless: false so you can visually log in
+  const opts = await launchOptions({ headless: false })
+  const browser = await firefox.launch(opts)
 
-  const context = await browser.newContext({
-    userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    viewport: { width: 1280, height: 900 },
-  })
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } })
 
   const page = await context.newPage()
   await page.goto('https://www.linkedin.com/login')
 
-  // Wait for user to log in and press Enter
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
   await new Promise(resolve => rl.question('\nPress Enter after you have logged in successfully... ', resolve))
   rl.close()
 
-  // Save cookies
   const cookies = await context.cookies()
   const hasAuth = cookies.some(c => c.name === 'li_at')
 
