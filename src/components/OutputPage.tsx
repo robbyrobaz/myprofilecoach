@@ -100,6 +100,15 @@ export default function OutputPage({ output, sessionId }: Props) {
         body: JSON.stringify({ sessionId }),
       })
       if (!res.ok) throw new Error('failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `resume-optimized.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
       setPdfStatus('done')
     } catch {
       setPdfStatus('error')
@@ -220,14 +229,14 @@ export default function OutputPage({ output, sessionId }: Props) {
             <div className="rounded-2xl border border-slate-700 bg-slate-800/40 p-10 text-center space-y-5">
               <div className="text-5xl">📄</div>
               <div>
-                <h3 className="font-semibold text-slate-200 text-lg mb-2">PDF Resume Export</h3>
+                <h3 className="font-semibold text-slate-200 text-lg mb-2">ATS-Friendly PDF Resume</h3>
                 <p className="text-slate-400 text-sm max-w-xs mx-auto leading-relaxed">
-                  ATS-friendly PDF resume from your optimized LinkedIn content. Coming soon with Pro.
+                  Download your optimized profile as a clean, recruiter-ready PDF resume.
                 </p>
               </div>
               {pdfStatus === 'idle' && (
                 <Button onClick={handleGeneratePdf} className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl px-8 h-11">
-                  Generate PDF Resume
+                  Download PDF Resume
                 </Button>
               )}
               {pdfStatus === 'loading' && (
@@ -236,11 +245,24 @@ export default function OutputPage({ output, sessionId }: Props) {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Generating...
+                  Building your PDF...
+                </div>
+              )}
+              {pdfStatus === 'done' && (
+                <div className="space-y-3">
+                  <p className="text-emerald-400 text-sm font-medium">✓ PDF downloaded successfully</p>
+                  <button onClick={() => setPdfStatus('idle')} className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2">
+                    Download again
+                  </button>
                 </div>
               )}
               {pdfStatus === 'error' && (
-                <p className="text-slate-500 text-sm italic">PDF export is coming soon. Your LinkedIn content above is ready to use.</p>
+                <div className="space-y-2">
+                  <p className="text-red-400 text-sm">PDF generation failed.</p>
+                  <button onClick={() => setPdfStatus('idle')} className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2">
+                    Try again
+                  </button>
+                </div>
               )}
             </div>
           </TabsContent>
