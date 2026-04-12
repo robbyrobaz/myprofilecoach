@@ -79,7 +79,8 @@ export async function scoreProfile(
 Profile summary:
 Headline: ${parsedProfile.headline}
 About: ${parsedProfile.about?.slice(0, 500)}
-Roles: ${parsedProfile.roles.map(r => `${r.title} at ${r.company}`).join(', ')}
+Roles:
+${parsedProfile.roles.map(r => `- ${r.title} at ${r.company} (${r.startDate}–${r.endDate})\n  ${r.bullets.slice(0, 4).join('\n  ')}`).join('\n')}
 Skills: ${parsedProfile.skills.slice(0, 20).join(', ')}
 
 Do three things and return combined JSON:
