@@ -16,9 +16,20 @@ const SYSTEM_PROMPT = `You are an expert career coach and LinkedIn optimization 
 Always respond in valid JSON unless explicitly told otherwise. Be specific, not generic.`
 
 function jsonResponse<T>(text: string): T {
-  const match = text.match(/```json\n?([\s\S]*?)\n?```/) || text.match(/(\{[\s\S]*\})/)
+  const match = text.match(/```json\n?([\s\S]*?)\n?```/) || text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/)
   const raw = match ? match[1] : text
-  return JSON.parse(raw.trim()) as T
+  try {
+    return JSON.parse(raw.trim()) as T
+  } catch {
+    throw new Error(`Claude returned invalid JSON: ${raw.slice(0, 200)}`)
+  }
+}
+
+function extractText(content: Anthropic.Messages.ContentBlock[]): string {
+  if (!content || content.length === 0) throw new Error('Claude returned empty response')
+  const block = content[0]
+  if (block.type !== 'text') throw new Error(`Unexpected content type: ${block.type}`)
+  return block.text
 }
 
 // Call 1: Parse profile
@@ -44,7 +55,7 @@ Return JSON matching this shape:
 }`
     }]
   })
-  return jsonResponse<ParsedProfile>(msg.content[0].type === 'text' ? msg.content[0].text : '')
+  return jsonResponse<ParsedProfile>(extractText(msg.content))
 }
 
 // Call 2+3+4: Job research + keyword extraction + profile score (combined to save calls)
@@ -87,7 +98,7 @@ Return JSON:
 }`
     }]
   })
-  return jsonResponse(msg.content[0].type === 'text' ? msg.content[0].text : '')
+  return jsonResponse(extractText(msg.content))
 }
 
 // Calls 5-7: Generate interview questions
@@ -121,7 +132,7 @@ Return JSON array:
 [{ "roleIndex": number, "company": "string", "question": "string", "hint": "short hint e.g. 'Even a rough estimate helps'" }]`
     }]
   })
-  return jsonResponse<InterviewQuestion[]>(msg.content[0].type === 'text' ? msg.content[0].text : '')
+  return jsonResponse<InterviewQuestion[]>(extractText(msg.content))
 }
 
 // Call 8: Process user answers into achievement language
@@ -148,7 +159,7 @@ For each answer: identify the achievement, add quantification where provided or 
 Return JSON: { "achievements": ["string"] }`
     }]
   })
-  const result = jsonResponse<{ achievements: string[] }>(msg.content[0].type === 'text' ? msg.content[0].text : '')
+  const result = jsonResponse<{ achievements: string[] }>(extractText(msg.content))
   return result.achievements.join('\n')
 }
 
@@ -189,7 +200,7 @@ Return JSON array:
 }]`
     }]
   })
-  return jsonResponse<SuggestionCard[]>(msg.content[0].type === 'text' ? msg.content[0].text : '')
+  return jsonResponse<SuggestionCard[]>(extractText(msg.content))
 }
 
 // Call 13: Finalize output
@@ -229,5 +240,5 @@ Return the complete finalized profile as JSON with a new score estimate:
 }`
     }]
   })
-  return jsonResponse<FinalizedOutput>(msg.content[0].type === 'text' ? msg.content[0].text : '')
+  return jsonResponse<FinalizedOutput>(extractText(msg.content))
 }

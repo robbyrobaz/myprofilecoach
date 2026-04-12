@@ -61,29 +61,68 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
 export default function ScoreReveal({ score, sessionId, keywords }: Props) {
   const router = useRouter()
   const [isSubscribed, setIsSubscribed] = useState(false)
+  const [email, setEmail] = useState('')
+  const [showEmailInput, setShowEmailInput] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [interviewLoading, setInterviewLoading] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    const token = localStorage.getItem('linkedin_optimizer_token')
-    if (token) setIsSubscribed(true)
+    const stored = localStorage.getItem('mpc_subscribed')
+    if (stored === 'true') setIsSubscribed(true)
+    const storedEmail = localStorage.getItem('mpc_email')
+    if (storedEmail) setEmail(storedEmail)
   }, [])
 
   async function handleCheckout() {
+    if (!email.trim()) {
+      setShowEmailInput(true)
+      return
+    }
+    setCheckoutLoading(true)
+    setError('')
     try {
-      const res = await fetch('/api/checkout', {
+      localStorage.setItem('mpc_email', email)
+      const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId }),
+        body: JSON.stringify({ email, sessionId }),
       })
-      const data = (await res.json()) as { url?: string }
+      const data = (await res.json()) as { url?: string; error?: string }
       if (data.url) window.location.href = data.url
+      else setError(data.error ?? 'Checkout failed')
     } catch {
-      // silently fail — UI will stay visible
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setCheckoutLoading(false)
     }
   }
 
-  function handleStartInterview() {
-    router.push(`/session/${sessionId}?stage=interviewing`)
-    router.refresh()
+  async function handleStartInterview() {
+    const userEmail = email || localStorage.getItem('mpc_email') || ''
+    if (!userEmail) {
+      setError('Please enter your email first.')
+      setShowEmailInput(true)
+      return
+    }
+    setInterviewLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/interview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, userEmail }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error((data as { error?: string }).error ?? 'Failed to start interview')
+      }
+      router.push(`/session/${sessionId}`)
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start interview')
+      setInterviewLoading(false)
+    }
   }
 
   const overallColor =
@@ -198,15 +237,22 @@ export default function ScoreReveal({ score, sessionId, keywords }: Props) {
           </CardContent>
         </Card>
 
+        {error && (
+          <div className="p-3 bg-red-900/40 border border-red-700 rounded-lg text-red-300 text-sm text-center">
+            {error}
+          </div>
+        )}
+
         {/* CTA */}
         {isSubscribed ? (
           <div className="text-center space-y-3">
             <p className="text-slate-400 text-sm">You have an active subscription.</p>
             <Button
               onClick={handleStartInterview}
-              className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base"
+              disabled={interviewLoading}
+              className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base disabled:opacity-60"
             >
-              Start Interview with Claude →
+              {interviewLoading ? 'Starting interview...' : 'Start Interview with Claude →'}
             </Button>
           </div>
         ) : (
@@ -227,11 +273,21 @@ export default function ScoreReveal({ score, sessionId, keywords }: Props) {
                 </li>
               ))}
             </ul>
+            {showEmailInput && (
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
+              />
+            )}
             <Button
               onClick={handleCheckout}
-              className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base"
+              disabled={checkoutLoading}
+              className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base disabled:opacity-60"
             >
-              Fix my profile — $20/mo, cancel anytime
+              {checkoutLoading ? 'Redirecting to checkout...' : 'Fix my profile — $20/mo, cancel anytime'}
             </Button>
             <p className="text-xs text-slate-500">Stripe secure checkout. Cancel any time.</p>
           </div>
