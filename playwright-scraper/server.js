@@ -165,7 +165,7 @@ app.post(SCRAPE, async (req, res) => {
         document.querySelectorAll('button, span[role="button"]').forEach(el => {
           const txt = (el.textContent || '').toLowerCase().trim()
           if (txt === 'show more' || txt === 'see more' || txt === '…see more') {
-            (el as HTMLElement).click()
+            el.click()
           }
         })
       })
@@ -176,7 +176,7 @@ app.post(SCRAPE, async (req, res) => {
     // Extract clean profile text
     const text = await page.evaluate(() => {
       const main = document.querySelector('main') || document.body
-      const clone = main.cloneNode(true) as HTMLElement
+      const clone = main.cloneNode(true)
 
       // Remove noise
       clone.querySelectorAll([
