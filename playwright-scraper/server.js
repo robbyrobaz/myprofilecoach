@@ -103,12 +103,9 @@ app.post(SCRAPE, async (req, res) => {
       Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
     })
 
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
+    await page.goto(url, { waitUntil: 'load', timeout: 45000 })
 
-    // Wait for initial render
-    await page.waitForTimeout(2000)
-
-    // Check for session expiry before doing any work
+    // Check for session expiry immediately
     const title = await page.title()
     if (title.toLowerCase().includes('sign in') || title.toLowerCase().includes('log in')) {
       await browser.close()
@@ -117,54 +114,35 @@ app.post(SCRAPE, async (req, res) => {
       })
     }
 
-    // Scroll down the full page to trigger lazy-loading of all sections
-    await page.evaluate(async () => {
-      await new Promise(resolve => {
-        let totalHeight = 0
-        const distance = 500
-        const timer = setInterval(() => {
-          window.scrollBy(0, distance)
-          totalHeight += distance
-          if (totalHeight >= document.body.scrollHeight) {
-            clearInterval(timer)
-            resolve()
-          }
-        }, 150)
-      })
-    })
+    // LinkedIn renders Experience/Education sections via lazy XHR after page load.
+    // Strategy: scroll slowly down the full page to trigger each section,
+    // then wait for those requests to complete before extracting.
+    await page.waitForTimeout(2000)
 
-    // Scroll back to top so LinkedIn re-renders the full profile
-    await page.evaluate(() => window.scrollTo(0, 0))
-    await page.waitForTimeout(1000)
-
-    // Click all "Show more" / "See more" expand buttons in experience & about sections
-    // LinkedIn uses several different button patterns for these
-    const showMoreSelectors = [
-      'button[aria-label*="Show more"]',
-      'button[aria-label*="see more"]',
-      'button.inline-show-more-text__button',
-      'button.pvs-list__item--with-top-padding',
-      '.lt-line-clamp__more',
-      'span[role="button"].pvs-list__footer-wrapper',
-      'a[data-control-name="expand_show_more_button"]',
-    ]
-
-    for (const selector of showMoreSelectors) {
-      try {
-        const buttons = await page.$$(selector)
-        for (const btn of buttons) {
-          await btn.click().catch(() => {}) // ignore if not clickable
-          await page.waitForTimeout(200)
-        }
-      } catch { /* ignore selector errors */ }
+    // Scroll the whole page slowly in small steps
+    const pageHeight = await page.evaluate(() => document.body.scrollHeight)
+    const steps = Math.ceil(pageHeight / 400)
+    for (let i = 0; i <= steps; i++) {
+      await page.evaluate((pos) => window.scrollTo(0, pos), i * 400)
+      await page.waitForTimeout(250)
     }
 
-    // Also look for any button whose visible text contains "more"
+    // Give XHR responses time to render
+    await page.waitForTimeout(3000)
+
+    // Scroll back to top
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.waitForTimeout(500)
+
+    // Click all "Show more" / "See more" expand buttons
     try {
       await page.evaluate(() => {
-        document.querySelectorAll('button, span[role="button"]').forEach(el => {
-          const txt = (el.textContent || '').toLowerCase().trim()
-          if (txt === 'show more' || txt === 'see more' || txt === '…see more') {
+        document.querySelectorAll('button, span[role="button"], a[role="button"]').forEach(el => {
+          const txt = (el.textContent || '').toLowerCase().replace(/\s+/g, ' ').trim()
+          if (
+            txt.includes('show more') || txt.includes('see more') ||
+            txt.includes('show all') || txt === '…see more'
+          ) {
             el.click()
           }
         })
@@ -178,13 +156,14 @@ app.post(SCRAPE, async (req, res) => {
       const main = document.querySelector('main') || document.body
       const clone = main.cloneNode(true)
 
-      // Remove noise
+      // Remove noise — do NOT remove aria-hidden, LinkedIn may use it on real content
       clone.querySelectorAll([
         'script', 'style', 'nav', 'header', 'button',
-        'svg', '[aria-hidden="true"]', '.artdeco-modal',
+        'svg', '.artdeco-modal',
         '.msg-overlay-list-bubble', '.feed-following-bar',
         '.pv-open-to-carousel', '.artdeco-card__actions',
-        '.pvs-header__container button', // "Add section" buttons
+        '.feed-identity-module', '.pv-browsemap-section',
+        '.pv-ads-wrapper', '.ad-banner-container',
       ].join(',')).forEach(el => el.remove())
 
       return (clone.innerText || clone.textContent || '')
