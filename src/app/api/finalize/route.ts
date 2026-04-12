@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { finalizeOutput, emptyMetrics, mergeMetrics } from '@/lib/claude'
-import { getSession, saveSession } from '@/lib/kv'
+import { getSession, saveSession, incrStat } from '@/lib/kv'
 import type { SuggestionCard } from '@/lib/types'
 import { logger } from '@/lib/logger'
 
@@ -47,7 +47,10 @@ export async function POST(request: NextRequest) {
     session.finalizedLinkedIn = output
     session.metrics = metrics
     session.stage = 'complete'
-    await saveSession(session)
+    await Promise.all([
+      saveSession(session),
+      incrStat('finalizations', log.costUsd),
+    ])
 
     return Response.json({ output, metrics })
   } catch (err) {

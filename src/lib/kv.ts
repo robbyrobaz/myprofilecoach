@@ -53,6 +53,15 @@ export async function getUser(email: string): Promise<UserRecord | null> {
 
 export async function saveUser(user: UserRecord): Promise<void> {
   await kv.set(`${P}user:${user.id}`, user)
+  // Add to user index (lpush is idempotent-ish — dupes are fine, we dedupe on read)
+  await kv.lpush(`${P}users:index`, user.id)
+}
+
+export async function getUserIndex(): Promise<UserRecord[]> {
+  const emails = await kv.lrange<string>(`${P}users:index`, 0, 499)
+  const unique = [...new Set(emails)]
+  const records = await Promise.all(unique.map(e => kv.get<UserRecord>(`${P}user:${e}`)))
+  return records.filter(Boolean) as UserRecord[]
 }
 
 export async function getUserByStripeId(customerId: string): Promise<UserRecord | null> {
@@ -80,6 +89,32 @@ export async function checkFreeScoreLimit(browserId: string): Promise<{ allowed:
   }
   await kv.set(key, used + 1, { ex: FREE_SCORE_TTL })
   return { allowed: true, used: used + 1, limit: FREE_SCORE_LIMIT }
+}
+
+// Stats counters — track run counts and costs per pipeline step
+export type StatKey = 'scores' | 'interviews' | 'suggestions' | 'finalizations' | 'pdfs'
+
+export async function incrStat(stat: StatKey, costUsd = 0): Promise<void> {
+  await kv.incr(`${P}stats:count:${stat}`)
+  if (costUsd > 0) {
+    // Store as integer micros (×100000) for precision
+    await kv.incrby(`${P}stats:cost_micros:${stat}`, Math.round(costUsd * 100000))
+  }
+}
+
+export interface StatsData {
+  counts: Record<StatKey, number>
+  costs: Record<StatKey, number>
+}
+
+export async function getStats(): Promise<StatsData> {
+  const keys: StatKey[] = ['scores', 'interviews', 'suggestions', 'finalizations', 'pdfs']
+  const countKeys = keys.map(k => `${P}stats:count:${k}`)
+  const costKeys  = keys.map(k => `${P}stats:cost_micros:${k}`)
+  const all = await Promise.all([...countKeys, ...costKeys].map(k => kv.get<number>(k)))
+  const counts = Object.fromEntries(keys.map((k, i) => [k, all[i] ?? 0])) as Record<StatKey, number>
+  const costs  = Object.fromEntries(keys.map((k, i) => [k, ((all[keys.length + i] ?? 0) as number) / 100000])) as Record<StatKey, number>
+  return { counts, costs }
 }
 
 // Score index — compact entries for admin review

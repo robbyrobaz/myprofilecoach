@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getScoreIndex, getFeedbackList } from '@/lib/kv'
+import { getScoreIndex, getFeedbackList, getStats, getUserIndex } from '@/lib/kv'
 
 export async function GET(request: NextRequest) {
   const key = request.nextUrl.searchParams.get('key')
@@ -7,10 +7,12 @@ export async function GET(request: NextRequest) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const [scores, feedback] = await Promise.all([
+  const [scores, feedback, stats, users] = await Promise.all([
     getScoreIndex(200),
     getFeedbackList(100),
+    getStats(),
+    getUserIndex(),
   ])
 
-  return Response.json({ scores, feedback })
+  return Response.json({ scores, feedback, stats, users })
 }

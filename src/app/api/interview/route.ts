@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { generateInterviewQuestions, emptyMetrics, mergeMetrics } from '@/lib/claude'
-import { getSession, saveSession, getUser, checkAndIncrementUsage } from '@/lib/kv'
+import { getSession, saveSession, getUser, checkAndIncrementUsage, incrStat } from '@/lib/kv'
 import { logger } from '@/lib/logger'
 
 export const maxDuration = 60 // seconds
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     session.interviewQuestions = questions
     session.metrics = metrics
     session.stage = 'interviewing'
-    await saveSession(session)
+    await Promise.all([saveSession(session), incrStat('interviews', log.costUsd)])
 
     return Response.json({ questions })
   } catch (err) {

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getSession } from '@/lib/kv'
+import { getSession, incrStat } from '@/lib/kv'
 import { renderToBuffer, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 import type { FinalizedOutput, ParsedProfile } from '@/lib/types'
 
@@ -252,6 +252,8 @@ export async function POST(request: NextRequest) {
       .toLowerCase()
       .slice(0, 40)
     const filename = `resume-${namePart}.pdf`
+
+    await incrStat('pdfs')
 
     return new Response(buffer as unknown as BodyInit, {
       headers: {

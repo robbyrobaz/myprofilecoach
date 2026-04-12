@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { processAnswers, generateSuggestionCards, emptyMetrics, mergeMetrics } from '@/lib/claude'
-import { getSession, saveSession } from '@/lib/kv'
+import { getSession, saveSession, incrStat } from '@/lib/kv'
 import { logger } from '@/lib/logger'
 
 export const maxDuration = 60 // seconds
@@ -67,7 +67,10 @@ export async function POST(request: NextRequest) {
     session.suggestionCards = cards
     session.metrics = metrics
     session.stage = 'suggestions'
-    await saveSession(session)
+    await Promise.all([
+      saveSession(session),
+      incrStat('suggestions', answersLog.costUsd + cardsLog.costUsd),
+    ])
 
     return Response.json({ cards })
   } catch (err) {
