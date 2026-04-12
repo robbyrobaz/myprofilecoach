@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useParams } from 'next/navigation'
 import type { SessionState } from '@/lib/types'
 import ScoreReveal from '@/components/ScoreReveal'
 import InterviewPhase from '@/components/InterviewPhase'
@@ -19,12 +19,8 @@ function PaidDetector() {
   return null
 }
 
-export default function SessionPage({
-  params,
-}: {
-  params: { id: string }
-}) {
-  const { id } = params
+export default function SessionPage() {
+  const { id } = useParams<{ id: string }>()
   const [session, setSession] = useState<SessionState | null | 'loading'>('loading')
 
   useEffect(() => {
