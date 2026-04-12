@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import Nav from '@/components/Nav'
+import AnalysisHUD from '@/components/AnalysisHUD'
 
 // Bookmarklet — runs on linkedin.com, scrolls/expands profile, opens MPC in new tab,
 // sends profile text via postMessage (bypasses CSP/CORS entirely).
@@ -65,6 +66,7 @@ function HeroForm() {
   const [targetRole, setTargetRole] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingMsg, setLoadingMsg] = useState('')
+  const [scoring, setScoring] = useState(false)
   const [error, setError] = useState('')
   const [showBookmarklet, setShowBookmarklet] = useState(false)
   const [imported, setImported] = useState(false)
@@ -130,7 +132,8 @@ function HeroForm() {
       setLoading(true)
     }
 
-    setLoadingMsg('Analyzing your profile... (10–20 sec)')
+    setScoring(true)
+    setLoading(false) // hide form loading state, HUD takes over
     try {
       const savedEmail = localStorage.getItem('mpc_email') ?? undefined
       let browserId = localStorage.getItem('mpc_browser_id')
@@ -151,8 +154,12 @@ function HeroForm() {
       router.push(`/session/${data.sessionId}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
-      setLoading(false)
+      setScoring(false)
     }
+  }
+
+  if (scoring) {
+    return <AnalysisHUD targetRole={targetRole} />
   }
 
   return (
