@@ -107,18 +107,22 @@ export async function scoreProfile(
 ): Promise<{ jobResearch: string; keywords: string[]; score: ProfileScore; log: ClaudeCallLog }> {
   const { text, log } = await claudeCall('scoreProfile', {
     model: MODEL,
-    max_tokens: 4096,
+    max_tokens: 6000,
     system: SYSTEM_PROMPT,
     messages: [{
       role: 'user',
       content: `Analyze this profile for someone targeting: ${targetRoles.join(', ')}
 
-Profile summary:
-Headline: ${parsedProfile.headline}
-About: ${parsedProfile.about?.slice(0, 500)}
-Roles:
-${parsedProfile.roles.map(r => `- ${r.title} at ${r.company} (${r.startDate}–${r.endDate})\n  ${r.bullets.slice(0, 4).join('\n  ')}`).join('\n')}
-Skills: ${parsedProfile.skills.slice(0, 20).join(', ')}
+Full profile:
+HEADLINE: ${parsedProfile.headline}
+
+ABOUT:
+${parsedProfile.about}
+
+EXPERIENCE:
+${parsedProfile.roles.map(r => `${r.title} at ${r.company} (${r.startDate}–${r.endDate})\n${r.bullets.map(b => `• ${b}`).join('\n')}`).join('\n\n')}
+
+SKILLS: ${parsedProfile.skills.join(', ')}
 
 Do three things and return combined JSON:
 
