@@ -81,7 +81,7 @@ export default function SessionPage() {
   let content: React.ReactNode
   if (stage === 'scored') {
     content = session.score
-      ? <ScoreReveal score={session.score} sessionId={session.id} keywords={session.keywords ?? []} />
+      ? <ScoreReveal score={session.score} sessionId={session.id} keywords={session.keywords ?? []} parsedRoles={session.parsedProfile?.roles ?? []} />
       : <Spinner message="Scoring your profile..." />
   } else if (stage === 'interviewing' || stage === 'answering') {
     content = session.interviewQuestions

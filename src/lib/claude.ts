@@ -76,11 +76,13 @@ async function claudeCall(step: string, params: Anthropic.Messages.MessageCreate
 export async function parseProfile(rawProfile: string): Promise<{ result: ParsedProfile; log: ClaudeCallLog }> {
   const { text, log } = await claudeCall('parseProfile', {
     model: MODEL,
-    max_tokens: 4096,
+    max_tokens: 8192,
     system: SYSTEM_PROMPT,
     messages: [{
       role: 'user',
       content: `Parse this LinkedIn profile into structured JSON. The text may be messy — copied from mobile, browser, or a bookmarklet — so it may contain navigation text, button labels ("Show more", "Connect", "Message", "Follow"), reaction counts, timestamps, ads, or other LinkedIn UI noise. Ignore all of that. Focus only on career content: headline, about/summary, work experience, education, and skills.
+
+IMPORTANT: Extract ALL work experience roles — not just the most recent one. People often have 5-10+ roles spanning 15-20 years. Include every job listed, oldest to newest.
 
 Profile text (may be noisy):
 ${rawProfile}

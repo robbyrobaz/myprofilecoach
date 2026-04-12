@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       const { result, log } = await parseProfile(profileText)
       parsedProfile = result
       metrics = mergeMetrics(metrics, log)
-      logger.info('/api/score', 'parseProfile done', { sessionId, model: log.model, inputTokens: log.inputTokens, outputTokens: log.outputTokens, durationMs: log.durationMs, costUsd: log.costUsd.toFixed(5), headline: parsedProfile.headline, roleCount: parsedProfile.roles.length })
+      logger.info('/api/score', 'parseProfile done', { sessionId, model: log.model, inputTokens: log.inputTokens, outputTokens: log.outputTokens, durationMs: log.durationMs, costUsd: log.costUsd.toFixed(5), headline: parsedProfile.headline, roleCount: parsedProfile.roles.length, roles: parsedProfile.roles.map(r => `${r.title} @ ${r.company}`) })
     } catch (parseErr) {
       const parseMsg = parseErr instanceof Error ? parseErr.message : String(parseErr)
       logger.error('/api/score', 'parseProfile failed', { sessionId, error: parseMsg })

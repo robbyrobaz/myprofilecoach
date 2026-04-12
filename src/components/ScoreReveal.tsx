@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { ProfileScore } from '@/lib/types'
+import type { ProfileScore, ParsedRole } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -11,6 +11,7 @@ interface Props {
   score: ProfileScore
   sessionId: string
   keywords: string[]
+  parsedRoles?: ParsedRole[]
 }
 
 function AnimatedScore({ target }: { target: number }) {
@@ -134,7 +135,7 @@ function FeedbackWidget({ sessionId }: { sessionId: string }) {
   )
 }
 
-export default function ScoreReveal({ score, sessionId, keywords }: Props) {
+export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = [] }: Props) {
   const router = useRouter()
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [email, setEmail] = useState('')
@@ -316,6 +317,29 @@ export default function ScoreReveal({ score, sessionId, keywords }: Props) {
         {error && (
           <div className="p-3 bg-red-900/40 border border-red-700 rounded-lg text-red-300 text-sm text-center">
             {error}
+          </div>
+        )}
+
+        {/* Roles detected — lets users verify all jobs were captured */}
+        {parsedRoles.length > 0 && (
+          <div className="rounded-xl border border-white/8 bg-white/3 px-4 py-3 space-y-1.5">
+            <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+              Roles detected ({parsedRoles.length})
+            </p>
+            <ul className="space-y-0.5">
+              {parsedRoles.map((r, i) => (
+                <li key={i} className="text-sm text-slate-300">
+                  <span className="font-medium">{r.title}</span>
+                  <span className="text-slate-500"> · {r.company}</span>
+                  {r.startDate && <span className="text-slate-600 text-xs ml-1">({r.startDate}{r.endDate ? `–${r.endDate}` : '–present'})</span>}
+                </li>
+              ))}
+            </ul>
+            {parsedRoles.length === 1 && (
+              <p className="text-xs text-amber-400/80 mt-1">
+                Only 1 role found. If you have more experience, paste your profile manually for better results.
+              </p>
+            )}
           </div>
         )}
 

@@ -105,10 +105,10 @@ app.post(SCRAPE, async (req, res) => {
 
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
 
-    // Wait for LinkedIn's profile content to render
-    await page.waitForTimeout(3000)
+    // Wait for initial render
+    await page.waitForTimeout(2000)
 
-    // Check for session expiry
+    // Check for session expiry before doing any work
     const title = await page.title()
     if (title.toLowerCase().includes('sign in') || title.toLowerCase().includes('log in')) {
       await browser.close()
@@ -117,16 +117,74 @@ app.post(SCRAPE, async (req, res) => {
       })
     }
 
+    // Scroll down the full page to trigger lazy-loading of all sections
+    await page.evaluate(async () => {
+      await new Promise(resolve => {
+        let totalHeight = 0
+        const distance = 500
+        const timer = setInterval(() => {
+          window.scrollBy(0, distance)
+          totalHeight += distance
+          if (totalHeight >= document.body.scrollHeight) {
+            clearInterval(timer)
+            resolve()
+          }
+        }, 150)
+      })
+    })
+
+    // Scroll back to top so LinkedIn re-renders the full profile
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.waitForTimeout(1000)
+
+    // Click all "Show more" / "See more" expand buttons in experience & about sections
+    // LinkedIn uses several different button patterns for these
+    const showMoreSelectors = [
+      'button[aria-label*="Show more"]',
+      'button[aria-label*="see more"]',
+      'button.inline-show-more-text__button',
+      'button.pvs-list__item--with-top-padding',
+      '.lt-line-clamp__more',
+      'span[role="button"].pvs-list__footer-wrapper',
+      'a[data-control-name="expand_show_more_button"]',
+    ]
+
+    for (const selector of showMoreSelectors) {
+      try {
+        const buttons = await page.$$(selector)
+        for (const btn of buttons) {
+          await btn.click().catch(() => {}) // ignore if not clickable
+          await page.waitForTimeout(200)
+        }
+      } catch { /* ignore selector errors */ }
+    }
+
+    // Also look for any button whose visible text contains "more"
+    try {
+      await page.evaluate(() => {
+        document.querySelectorAll('button, span[role="button"]').forEach(el => {
+          const txt = (el.textContent || '').toLowerCase().trim()
+          if (txt === 'show more' || txt === 'see more' || txt === '…see more') {
+            (el as HTMLElement).click()
+          }
+        })
+      })
+    } catch { /* ignore */ }
+
+    await page.waitForTimeout(1500)
+
     // Extract clean profile text
     const text = await page.evaluate(() => {
       const main = document.querySelector('main') || document.body
-      const clone = main.cloneNode(true)
+      const clone = main.cloneNode(true) as HTMLElement
 
       // Remove noise
       clone.querySelectorAll([
         'script', 'style', 'nav', 'header', 'button',
         'svg', '[aria-hidden="true"]', '.artdeco-modal',
         '.msg-overlay-list-bubble', '.feed-following-bar',
+        '.pv-open-to-carousel', '.artdeco-card__actions',
+        '.pvs-header__container button', // "Add section" buttons
       ].join(',')).forEach(el => el.remove())
 
       return (clone.innerText || clone.textContent || '')
