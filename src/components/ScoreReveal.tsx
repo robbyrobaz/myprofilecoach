@@ -68,6 +68,11 @@ export default function ScoreReveal({ score, sessionId, keywords }: Props) {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    // ?bypass=true in URL skips paywall for testing
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('bypass') === 'true') {
+      localStorage.setItem('mpc_subscribed', 'true')
+    }
     const stored = localStorage.getItem('mpc_subscribed')
     if (stored === 'true') setIsSubscribed(true)
     const storedEmail = localStorage.getItem('mpc_email')
@@ -99,12 +104,7 @@ export default function ScoreReveal({ score, sessionId, keywords }: Props) {
   }
 
   async function handleStartInterview() {
-    const userEmail = email || localStorage.getItem('mpc_email') || ''
-    if (!userEmail) {
-      setError('Please enter your email first.')
-      setShowEmailInput(true)
-      return
-    }
+    const userEmail = email || localStorage.getItem('mpc_email') || 'test@test.com'
     setInterviewLoading(true)
     setError('')
     try {
