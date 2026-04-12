@@ -152,7 +152,7 @@ export default function HomePage() {
                 <span className="text-indigo-400">Are you using AI to be found?</span>
               </h1>
               <p className="text-lg text-slate-400 mb-8 leading-relaxed">
-                Paste your LinkedIn profile and get an instant AI-powered score. Then let Claude interview you and rewrite your profile to land in recruiter searches — in under 15 minutes.
+                Paste your LinkedIn profile and get an instant AI-powered score. Then let AI interview you and rewrite your profile to land in recruiter searches — in under 15 minutes.
               </p>
               <div className="rounded-2xl border border-slate-700 bg-slate-800/40 p-6 backdrop-blur-sm">
                 <HeroForm />
@@ -181,8 +181,8 @@ export default function HomePage() {
             },
             {
               step: '02',
-              title: 'Claude Interviews You',
-              desc: 'Claude asks 3–5 targeted questions about your real achievements and impact. You answer in your own words — no fluff needed.',
+              title: 'AI Interviews You',
+              desc: 'AI asks 3–5 targeted questions about your real achievements and impact. You answer in your own words — no fluff needed.',
               accent: 'text-violet-400',
             },
             {
@@ -238,7 +238,7 @@ export default function HomePage() {
             <ul className="text-sm text-slate-300 space-y-3 mb-8 text-left">
               {[
                 'Full profile score with all issues unlocked',
-                'Claude interview to surface your real achievements',
+                'AI interview to surface your real achievements',
                 'AI rewrites for headline, about, every role',
                 'Up to 3 optimized profiles per month',
                 'PDF resume export (coming soon)',
@@ -253,14 +253,14 @@ export default function HomePage() {
             <Button className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base">
               Get started — $20/mo
             </Button>
-            <p className="text-xs text-slate-500 mt-3">Powered by Claude. Your data is never sold.</p>
+            <p className="text-xs text-slate-500 mt-3">Powered by AI. Your data is never sold.</p>
           </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="border-t border-slate-800 py-8 px-4 text-center text-xs text-slate-600">
-        LinkedIn AI Optimizer · Built with Claude · &copy; {new Date().getFullYear()}
+        LinkedIn AI Optimizer · Built with AI · &copy; {new Date().getFullYear()}
       </footer>
     </div>
   )

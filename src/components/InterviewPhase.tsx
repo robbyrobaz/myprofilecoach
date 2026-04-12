@@ -82,7 +82,7 @@ export default function InterviewPhase({ questions, sessionId }: Props) {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-          <p className="text-slate-300 font-medium text-lg mb-1">Claude is analyzing your experience...</p>
+          <p className="text-slate-300 font-medium text-lg mb-1">AI is analyzing your experience...</p>
           <p className="text-slate-500 text-sm">Building your optimized profile. This takes ~15 seconds.</p>
         </div>
       </div>
@@ -140,7 +140,7 @@ export default function InterviewPhase({ questions, sessionId }: Props) {
               <Textarea
                 value={currentAnswer}
                 onChange={(e) => setCurrentAnswer(e.target.value)}
-                placeholder="Write a few sentences about your experience, achievements, or impact. Raw notes are fine — Claude will polish them."
+                placeholder="Write a few sentences about your experience, achievements, or impact. Raw notes are fine — AI will polish them."
                 className="min-h-36 bg-slate-900/50 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20 resize-none"
               />
             </div>

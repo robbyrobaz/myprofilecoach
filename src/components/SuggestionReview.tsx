@@ -105,7 +105,7 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
           <p className="text-slate-300 font-medium text-lg mb-1">Finalizing your profile...</p>
-          <p className="text-slate-500 text-sm">Claude is compiling the approved changes.</p>
+          <p className="text-slate-500 text-sm">AI is compiling the approved changes.</p>
         </div>
       </div>
     )

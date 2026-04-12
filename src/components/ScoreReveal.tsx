@@ -252,20 +252,20 @@ export default function ScoreReveal({ score, sessionId, keywords }: Props) {
               disabled={interviewLoading}
               className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base disabled:opacity-60"
             >
-              {interviewLoading ? 'Starting interview...' : 'Start Interview with Claude →'}
+              {interviewLoading ? 'Starting interview...' : 'Start AI Interview →'}
             </Button>
           </div>
         ) : (
           <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-indigo-900/30 to-slate-800/60 p-8 text-center space-y-4">
             <h3 className="text-xl font-bold text-slate-100">Fix your profile — fully</h3>
             <p className="text-slate-400 text-sm leading-relaxed">
-              Claude will interview you, surface your real achievements, and rewrite every section of your LinkedIn profile to rank in recruiter searches.
+              AI will interview you, surface your real achievements, and rewrite every section of your LinkedIn profile to rank in recruiter searches.
             </p>
             <ul className="text-sm text-slate-300 space-y-2 text-left max-w-xs mx-auto">
               {[
                 'All critical issues unlocked',
                 'Full keyword gap list (20+ terms)',
-                'Claude interview + profile rewrite',
+                'AI interview + profile rewrite',
                 'Copy-paste ready output',
               ].map((f) => (
                 <li key={f} className="flex items-center gap-2">
