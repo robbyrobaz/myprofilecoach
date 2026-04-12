@@ -3,6 +3,9 @@ import { generateInterviewQuestions } from '@/lib/claude'
 import { getSession, saveSession, getUser, checkAndIncrementUsage } from '@/lib/kv'
 import { logger } from '@/lib/logger'
 
+export const maxDuration = 60 // seconds
+
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()

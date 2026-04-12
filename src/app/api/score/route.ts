@@ -3,6 +3,9 @@ import { parseProfile, scoreProfile } from '@/lib/claude'
 import { createSession, saveSession } from '@/lib/kv'
 import { logger } from '@/lib/logger'
 
+export const maxDuration = 60 // seconds
+
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
