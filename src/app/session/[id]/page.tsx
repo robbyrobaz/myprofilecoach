@@ -24,16 +24,34 @@ export default function SessionPage() {
   const [session, setSession] = useState<SessionState | null | 'loading'>('loading')
 
   useEffect(() => {
+    let cancelled = false
+
     async function load() {
       try {
         const res = await fetch(`/api/session/${id}`, { cache: 'no-store' })
-        if (!res.ok) { setSession(null); return }
-        setSession(await res.json())
+        if (!res.ok) { if (!cancelled) setSession(null); return }
+        const data = await res.json()
+        if (!cancelled) setSession(data)
+        return data
       } catch {
-        setSession(null)
+        if (!cancelled) setSession(null)
       }
     }
-    load()
+
+    // Stages that mean Claude is still working — keep polling
+    const POLLING_STAGES = new Set(['scoring', 'scored', 'interviewing', 'answering', 'suggestions', 'reviewing', 'finalizing'])
+
+    async function poll() {
+      const data = await load()
+      if (!data || cancelled) return
+      if (POLLING_STAGES.has(data.stage)) {
+        // Poll every 3s until stage settles into a renderable state
+        setTimeout(poll, 3000)
+      }
+    }
+
+    poll()
+    return () => { cancelled = true }
   }, [id])
 
   if (session === 'loading') {
