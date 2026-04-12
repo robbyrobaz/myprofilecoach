@@ -23,9 +23,7 @@
 <nav class="fixed top-0 left-0 right-0 z-50 border-b border-white/5 backdrop-blur-xl bg-black/40">
   <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <!-- Logo placeholder — replace with <img src="/logo.png"> -->
-      <div class="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-sm">M</div>
-      <span class="font-semibold text-white tracking-tight">My Profile Coach</span>
+      <div class="bg-white rounded-xl p-1.5 shadow-md"><img src="/myprofilecoach-logo.jpg" class="h-9 w-auto" alt="My Profile Coach"></div>
     </div>
     <div class="flex items-center gap-6">
       <a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">How it works</a>
@@ -65,7 +63,12 @@
       </div>
     </div>
 
-    <!-- Score card mockup -->
+    <!-- Hero right column: animation + score card -->
+    <div class="flex flex-col items-center gap-6">
+      <!-- Logo animation -->
+      <div class="rounded-2xl overflow-hidden shadow-2xl shadow-indigo-500/20 border border-white/10" style="width:220px;height:220px;">
+        <video src="/logo-animation.mp4" autoplay loop muted playsinline class="w-full h-full object-cover"></video>
+      </div>
     <div class="float">
       <div class="rounded-2xl border border-white/10 card-shine backdrop-blur-sm p-6 max-w-sm mx-auto glow">
         <div class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-5">Your Profile Analysis</div>
@@ -107,6 +110,7 @@
           <div class="flex items-center gap-3"><div class="w-20 text-xs text-slate-500">AI Signals</div><div class="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" style="width:90%"></div></div><div class="text-xs text-indigo-400 w-6 text-right font-medium">90</div></div>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </section>
