@@ -98,7 +98,7 @@ export default function SessionPage() {
   } else if (stage === 'processing') {
     content = <Spinner message="Building your suggestions..." />
   } else {
-    content = <Spinner message="Claude is working..." />
+    content = <Spinner message="Analyzing your profile..." />
   }
 
   return (
