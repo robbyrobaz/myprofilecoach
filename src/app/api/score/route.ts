@@ -42,6 +42,13 @@ export async function POST(request: NextRequest) {
     })
   } catch (err) {
     console.error('[/api/score] error:', err)
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
+    const msg = err instanceof Error ? err.message : String(err)
+    if (msg.includes('credit') || msg.includes('billing') || msg.includes('quota')) {
+      return Response.json({ error: 'Service temporarily unavailable. Please try again shortly.' }, { status: 503 })
+    }
+    if (msg.includes('invalid JSON') || msg.includes('JSON')) {
+      return Response.json({ error: 'Failed to parse profile. Please try again.' }, { status: 500 })
+    }
+    return Response.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }

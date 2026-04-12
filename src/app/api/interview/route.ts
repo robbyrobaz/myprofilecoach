@@ -60,6 +60,6 @@ export async function POST(request: NextRequest) {
     return Response.json({ questions })
   } catch (err) {
     console.error('[/api/interview] error:', err)
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
+    return Response.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }

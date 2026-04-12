@@ -118,6 +118,6 @@ Return JSON:
     return Response.json(result)
   } catch (err) {
     console.error('[/api/stripe/cancel] error:', err)
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
+    return Response.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }

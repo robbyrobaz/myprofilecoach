@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { SessionState } from '@/lib/types'
 import ScoreReveal from '@/components/ScoreReveal'
@@ -8,21 +8,24 @@ import InterviewPhase from '@/components/InterviewPhase'
 import SuggestionReview from '@/components/SuggestionReview'
 import OutputPage from '@/components/OutputPage'
 
+// Isolated component so useSearchParams doesn't block the whole page
+function PaidDetector() {
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    if (searchParams.get('paid') === 'true') {
+      localStorage.setItem('mpc_subscribed', 'true')
+    }
+  }, [searchParams])
+  return null
+}
+
 export default function SessionPage({
   params,
 }: {
   params: { id: string }
 }) {
   const { id } = params
-  const searchParams = useSearchParams()
   const [session, setSession] = useState<SessionState | null | 'loading'>('loading')
-
-  useEffect(() => {
-    // If returning from Stripe with ?paid=true, mark as subscribed in localStorage
-    if (searchParams.get('paid') === 'true') {
-      localStorage.setItem('mpc_subscribed', 'true')
-    }
-  }, [searchParams])
 
   useEffect(() => {
     async function load() {
@@ -38,7 +41,12 @@ export default function SessionPage({
   }, [id])
 
   if (session === 'loading') {
-    return <Spinner message="Loading your session..." />
+    return (
+      <>
+        <Suspense fallback={null}><PaidDetector /></Suspense>
+        <Spinner message="Loading your session..." />
+      </>
+    )
   }
 
   if (!session) {
@@ -51,48 +59,33 @@ export default function SessionPage({
 
   const { stage } = session
 
+  let content: React.ReactNode
   if (stage === 'scored') {
-    if (!session.score) return <Spinner message="Scoring your profile..." />
-    return (
-      <ScoreReveal
-        score={session.score}
-        sessionId={session.id}
-        keywords={session.keywords ?? []}
-      />
-    )
+    content = session.score
+      ? <ScoreReveal score={session.score} sessionId={session.id} keywords={session.keywords ?? []} />
+      : <Spinner message="Scoring your profile..." />
+  } else if (stage === 'interviewing' || stage === 'answering') {
+    content = session.interviewQuestions
+      ? <InterviewPhase questions={session.interviewQuestions} sessionId={session.id} />
+      : <Spinner message="Generating questions..." />
+  } else if (stage === 'suggestions' || stage === 'reviewing') {
+    content = session.suggestionCards
+      ? <SuggestionReview cards={session.suggestionCards} sessionId={session.id} />
+      : <Spinner message="Building suggestions..." />
+  } else if (stage === 'complete' || stage === 'pdf_ready') {
+    content = session.finalizedLinkedIn
+      ? <OutputPage output={session.finalizedLinkedIn} sessionId={session.id} />
+      : <Spinner message="Finalizing profile..." />
+  } else {
+    content = <Spinner message="Claude is working..." />
   }
 
-  if (stage === 'interviewing' || stage === 'answering') {
-    if (!session.interviewQuestions) return <Spinner message="Generating questions..." />
-    return (
-      <InterviewPhase
-        questions={session.interviewQuestions}
-        sessionId={session.id}
-      />
-    )
-  }
-
-  if (stage === 'suggestions' || stage === 'reviewing') {
-    if (!session.suggestionCards) return <Spinner message="Building suggestions..." />
-    return (
-      <SuggestionReview
-        cards={session.suggestionCards}
-        sessionId={session.id}
-      />
-    )
-  }
-
-  if (stage === 'complete' || stage === 'pdf_ready') {
-    if (!session.finalizedLinkedIn) return <Spinner message="Finalizing profile..." />
-    return (
-      <OutputPage
-        output={session.finalizedLinkedIn}
-        sessionId={session.id}
-      />
-    )
-  }
-
-  return <Spinner message="Claude is working..." />
+  return (
+    <>
+      <Suspense fallback={null}><PaidDetector /></Suspense>
+      {content}
+    </>
+  )
 }
 
 function Spinner({ message }: { message: string }) {
