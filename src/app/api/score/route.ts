@@ -60,18 +60,6 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     logger.error('/api/score', 'scoring failed', err)
-    if (msg.includes('credit') || msg.includes('billing') || msg.includes('quota')) {
-      return Response.json({ error: 'API billing issue. Please try again later.' }, { status: 503 })
-    }
-    if (msg.includes('invalid JSON') || msg.includes('JSON')) {
-      return Response.json({ error: 'Failed to parse profile. Please try again.' }, { status: 500 })
-    }
-    if (msg.includes('401') || msg.includes('403') || msg.includes('authentication') || msg.includes('Unauthorized')) {
-      return Response.json({ error: 'API authentication error. Please contact support.' }, { status: 503 })
-    }
-    if (msg.includes('404') || msg.includes('<html') || msg.includes('<!')) {
-      return Response.json({ error: 'AI service temporarily unavailable. Please try again.' }, { status: 503 })
-    }
-    return Response.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
+    return Response.json({ error: msg.slice(0, 300) }, { status: 500 })
   }
 }
