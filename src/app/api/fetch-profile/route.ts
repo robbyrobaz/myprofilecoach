@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     if (!res.ok || !data.profileText) {
       logger.warn('/api/fetch-profile', 'scraper returned error', { status: res.status, error: data.error })
       return Response.json(
-        { error: data.error ?? 'Could not fetch your LinkedIn profile. Please paste it manually.' },
+        { error: data.error ?? 'Profile requires login to view.' },
         { status: 422 }
       )
     }

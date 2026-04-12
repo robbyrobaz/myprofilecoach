@@ -81,7 +81,9 @@ function HeroForm() {
         }
         text = data.profileText
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not fetch profile. Try pasting it manually.')
+        // Auto-switch to paste mode with a helpful explanation
+        setMode('paste')
+        setError("LinkedIn requires login to view this profile — we can't fetch it automatically. Open LinkedIn, go to the profile, select all text (Ctrl+A / Cmd+A), copy, and paste it below.")
         setLoading(false)
         return
       }
