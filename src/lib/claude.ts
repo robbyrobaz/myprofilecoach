@@ -292,7 +292,7 @@ ${approvedChanges || '(user kept all original text)'}
 Return the complete finalized profile as JSON with a new score estimate.
 
 IMPORTANT RULES:
-- Include ALL roles from the original profile — not just the ones with approved changes. Apply approved changes to the relevant roles, keep original bullets for roles without changes.
+- Include ALL ${parsedProfile.roles.length} roles from the original profile — not just the ones with approved changes. Apply approved changes to the relevant roles, keep original bullets for roles without changes. Your output must contain exactly ${parsedProfile.roles.length} roles.
 - NEVER invent metrics, numbers, or statistics not present in the original profile or approved changes. No fabricated placement counts, percentages, or dollar amounts. No placeholder brackets like [X%] or [N+]. Every bullet must be complete and paste-ready.
 - Each role MUST have unique, differentiated bullets. Do NOT repeat or paraphrase the same bullet across multiple roles — even if they are similar titles at the same company.
 {
