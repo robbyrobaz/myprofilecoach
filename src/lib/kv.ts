@@ -1,10 +1,12 @@
 import { Redis } from '@upstash/redis'
-
-const kv = new Redis({
-  url: process.env.KV_REST_API_URL!,
-  token: process.env.KV_REST_API_TOKEN!,
-})
 import type { SessionState, UserRecord } from './types'
+
+// Upstash injects UPSTASH_REDIS_REST_* via Vercel marketplace;
+// manual setup uses KV_REST_API_*. Support both.
+const kv = new Redis({
+  url: (process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL)!,
+  token: (process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN)!,
+})
 
 const SESSION_TTL = 60 * 60 * 24 // 24 hours
 const P = 'mpc:' // app prefix — avoids collision on shared Upstash instances
