@@ -38,20 +38,21 @@ function AnimatedScore({ target }: { target: number }) {
   return <span>{displayed}</span>
 }
 
-function ScoreBar({ label, value }: { label: string; value: number }) {
+function ScoreBar({ label, value, max }: { label: string; value: number; max: number }) {
+  const pct = Math.round((value / max) * 100)
   const color =
-    value >= 70 ? 'bg-emerald-500' : value >= 45 ? 'bg-yellow-500' : 'bg-red-500'
+    pct >= 70 ? 'bg-emerald-500' : pct >= 45 ? 'bg-yellow-500' : 'bg-red-500'
 
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-sm">
         <span className="text-slate-300 capitalize">{label}</span>
-        <span className="font-medium text-slate-200 tabular-nums">{value}/100</span>
+        <span className="font-medium text-slate-200 tabular-nums">{value}/{max}</span>
       </div>
       <div className="h-2 rounded-full bg-slate-700 overflow-hidden">
         <div
           className={`h-full rounded-full ${color} transition-all duration-700`}
-          style={{ width: `${value}%` }}
+          style={{ width: `${pct}%` }}
         />
       </div>
     </div>
@@ -156,11 +157,11 @@ export default function ScoreReveal({ score, sessionId, keywords }: Props) {
         <Card className="bg-slate-800/60 border-slate-700">
           <CardContent className="pt-6 pb-6 space-y-4">
             <h2 className="font-semibold text-slate-200 mb-4">Score Breakdown</h2>
-            <ScoreBar label="Headline" value={score.breakdown.headline} />
-            <ScoreBar label="About / Summary" value={score.breakdown.about} />
-            <ScoreBar label="Experience Bullets" value={score.breakdown.experience} />
-            <ScoreBar label="Keyword Coverage" value={score.breakdown.keywords} />
-            <ScoreBar label="AI Visibility Signals" value={score.breakdown.aiSignals} />
+            <ScoreBar label="Headline" value={score.breakdown.headline} max={20} />
+            <ScoreBar label="About / Summary" value={score.breakdown.about} max={20} />
+            <ScoreBar label="Experience Bullets" value={score.breakdown.experience} max={30} />
+            <ScoreBar label="Keyword Coverage" value={score.breakdown.keywords} max={20} />
+            <ScoreBar label="AI Visibility Signals" value={score.breakdown.aiSignals} max={10} />
           </CardContent>
         </Card>
 
