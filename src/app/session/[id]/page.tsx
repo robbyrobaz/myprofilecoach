@@ -39,7 +39,7 @@ export default function SessionPage() {
     }
 
     // Stages that mean Claude is still working — keep polling
-    const POLLING_STAGES = new Set(['scoring', 'scored', 'interviewing', 'answering', 'suggestions', 'reviewing', 'finalizing'])
+    const POLLING_STAGES = new Set(['scoring', 'scored', 'interviewing', 'answering', 'processing', 'suggestions', 'reviewing', 'finalizing'])
 
     async function poll() {
       const data = await load()
@@ -90,6 +90,8 @@ export default function SessionPage() {
     content = session.finalizedLinkedIn
       ? <OutputPage output={session.finalizedLinkedIn} sessionId={session.id} />
       : <Spinner message="Finalizing profile..." />
+  } else if (stage === 'processing') {
+    content = <Spinner message="Building your suggestions..." />
   } else {
     content = <Spinner message="Claude is working..." />
   }
