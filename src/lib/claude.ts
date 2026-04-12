@@ -2,10 +2,13 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { ParsedProfile, ProfileScore, InterviewQuestion, SuggestionCard, FinalizedOutput } from './types'
 
 function getClient() {
-  return new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-    ...(process.env.ANTHROPIC_BASE_URL ? { baseURL: process.env.ANTHROPIC_BASE_URL } : {}),
-  })
+  const baseURL = process.env.ANTHROPIC_BASE_URL
+  // When using an alternate backend (e.g. MiniMax), ANTHROPIC_AUTH_TOKEN holds that key
+  // so we don't overwrite the real Anthropic key stored in ANTHROPIC_API_KEY
+  const apiKey = baseURL
+    ? (process.env.ANTHROPIC_AUTH_TOKEN ?? process.env.ANTHROPIC_API_KEY)
+    : process.env.ANTHROPIC_API_KEY
+  return new Anthropic({ apiKey, ...(baseURL ? { baseURL } : {}) })
 }
 const MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6'
 
