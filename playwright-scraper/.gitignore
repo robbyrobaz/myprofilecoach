@@ -1,2 +1,4 @@
 node_modules/
 linkedin-cookies.json
+chrome-session/
+chrome-linkedin-cookies.json
