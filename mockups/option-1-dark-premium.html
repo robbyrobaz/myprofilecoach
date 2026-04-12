@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Option 1 — Dark Premium</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  body { font-family: 'Inter', sans-serif; }
+  .glow { box-shadow: 0 0 60px rgba(99,102,241,0.3); }
+  .text-gradient { background: linear-gradient(135deg, #818cf8 0%, #6366f1 40%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero-gradient { background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.25) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 80% 80%, rgba(139,92,246,0.1) 0%, transparent 60%), #0a0a0f; }
+  .card-shine { background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%); }
+  .score-ring { background: conic-gradient(#6366f1 0% 62%, #1e1e2e 62% 100%); }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  @keyframes pulse-ring { 0%{box-shadow:0 0 0 0 rgba(99,102,241,0.4)} 100%{box-shadow:0 0 0 20px rgba(99,102,241,0)} }
+  .float { animation: float 4s ease-in-out infinite; }
+</style>
+</head>
+<body class="bg-[#0a0a0f] text-white">
+
+<!-- NAV -->
+<nav class="fixed top-0 left-0 right-0 z-50 border-b border-white/5 backdrop-blur-xl bg-black/40">
+  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <!-- Logo placeholder — replace with <img src="/logo.png"> -->
+      <div class="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-sm">M</div>
+      <span class="font-semibold text-white tracking-tight">My Profile Coach</span>
+    </div>
+    <div class="flex items-center gap-6">
+      <a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">How it works</a>
+      <a href="#" class="text-sm text-slate-400 hover:text-white transition-colors">Pricing</a>
+      <button class="h-9 px-5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold transition-all">Get started free</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero-gradient min-h-screen flex items-center pt-16">
+  <div class="max-w-6xl mx-auto px-6 py-24 grid lg:grid-cols-2 gap-16 items-center">
+    <div>
+      <div class="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-medium text-indigo-300 mb-8">
+        <span class="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+        Free profile score in 30 seconds
+      </div>
+      <h1 class="text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight mb-6">
+        Recruiters use AI<br>to find candidates.<br>
+        <span class="text-gradient">Use AI to be found.</span>
+      </h1>
+      <p class="text-lg text-slate-400 mb-10 leading-relaxed max-w-lg">
+        Paste your LinkedIn profile and get an instant AI score. Then let AI interview you and rewrite every section — headline, about, every role bullet — in under 15 minutes.
+      </p>
+      <div class="flex items-center gap-4">
+        <button class="h-13 px-8 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-semibold text-base transition-all glow">
+          Score my profile free →
+        </button>
+        <span class="text-sm text-slate-500">No account required</span>
+      </div>
+      <div class="flex items-center gap-6 mt-10">
+        <div class="text-center"><div class="text-2xl font-bold text-white">2,400+</div><div class="text-xs text-slate-500 mt-1">Profiles optimized</div></div>
+        <div class="w-px h-10 bg-slate-800"></div>
+        <div class="text-center"><div class="text-2xl font-bold text-white">+43pts</div><div class="text-xs text-slate-500 mt-1">Avg score increase</div></div>
+        <div class="w-px h-10 bg-slate-800"></div>
+        <div class="text-center"><div class="text-2xl font-bold text-white">$0.00</div><div class="text-xs text-slate-500 mt-1">To get your score</div></div>
+      </div>
+    </div>
+
+    <!-- Score card mockup -->
+    <div class="float">
+      <div class="rounded-2xl border border-white/10 card-shine backdrop-blur-sm p-6 max-w-sm mx-auto glow">
+        <div class="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-5">Your Profile Analysis</div>
+        <!-- Score comparison -->
+        <div class="flex items-center justify-center gap-8 mb-6">
+          <div class="text-center">
+            <div class="text-6xl font-black text-slate-600 tabular-nums">38</div>
+            <div class="text-xs text-slate-600 mt-1 font-medium">Before</div>
+          </div>
+          <div class="flex flex-col items-center">
+            <div class="text-indigo-400 text-2xl font-bold">→</div>
+          </div>
+          <div class="text-center">
+            <div class="text-6xl font-black text-indigo-400 tabular-nums">91</div>
+            <div class="text-xs text-indigo-400 mt-1 font-medium">After</div>
+          </div>
+        </div>
+        <div class="text-center mb-5">
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/15 border border-indigo-500/25 px-4 py-1.5 text-indigo-300 font-semibold text-sm">+53 points improvement</span>
+        </div>
+        <div class="space-y-2.5">
+          {['Headline','About','Experience','Keywords','AI Signals'].map((l,s) => {
+            const vals = [92,88,91,85,90]
+            return `<div class="flex items-center gap-3">
+              <div class="w-20 text-xs text-slate-500">${l}</div>
+              <div class="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" style="width:${vals[s]}%"></div>
+              </div>
+              <div class="text-xs text-indigo-400 w-6 text-right font-medium">${vals[s]}</div>
+            </div>`
+          })}
+        </div>
+        <!-- render bars directly -->
+        <div class="space-y-2.5 mt-3">
+          <div class="flex items-center gap-3"><div class="w-20 text-xs text-slate-500">Headline</div><div class="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" style="width:92%"></div></div><div class="text-xs text-indigo-400 w-6 text-right font-medium">92</div></div>
+          <div class="flex items-center gap-3"><div class="w-20 text-xs text-slate-500">About</div><div class="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" style="width:88%"></div></div><div class="text-xs text-indigo-400 w-6 text-right font-medium">88</div></div>
+          <div class="flex items-center gap-3"><div class="w-20 text-xs text-slate-500">Experience</div><div class="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" style="width:91%"></div></div><div class="text-xs text-indigo-400 w-6 text-right font-medium">91</div></div>
+          <div class="flex items-center gap-3"><div class="w-20 text-xs text-slate-500">Keywords</div><div class="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" style="width:85%"></div></div><div class="text-xs text-indigo-400 w-6 text-right font-medium">85</div></div>
+          <div class="flex items-center gap-3"><div class="w-20 text-xs text-slate-500">AI Signals</div><div class="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500" style="width:90%"></div></div><div class="text-xs text-indigo-400 w-6 text-right font-medium">90</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="py-24 px-6 border-t border-white/5">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-bold mb-3">From invisible to in-demand — in 15 minutes</h2>
+      <p class="text-slate-400">Three AI-powered steps that actually move the needle.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="rounded-2xl border border-white/5 card-shine p-7">
+        <div class="text-4xl font-black text-gradient mb-4">01</div>
+        <h3 class="font-semibold text-white text-lg mb-2">Paste & Score</h3>
+        <p class="text-sm text-slate-400 leading-relaxed">Paste your LinkedIn text. AI scores every section against how recruiter tools actually rank candidates in 2026.</p>
+      </div>
+      <div class="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-7">
+        <div class="text-4xl font-black text-gradient mb-4">02</div>
+        <h3 class="font-semibold text-white text-lg mb-2">AI Interviews You</h3>
+        <p class="text-sm text-slate-400 leading-relaxed">AI asks 3–5 targeted questions to surface hidden achievements and quantified wins you forgot to mention.</p>
+      </div>
+      <div class="rounded-2xl border border-white/5 card-shine p-7">
+        <div class="text-4xl font-black text-gradient mb-4">03</div>
+        <h3 class="font-semibold text-white text-lg mb-2">Get Optimized Profile</h3>
+        <p class="text-sm text-slate-400 leading-relaxed">Review AI rewrites for every section. Approve, edit, or skip. Copy straight to LinkedIn. Done.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="py-24 px-6 border-t border-white/5">
+  <div class="max-w-md mx-auto text-center">
+    <h2 class="text-3xl font-bold mb-3">One plan. Full access.</h2>
+    <p class="text-slate-400 mb-12">Cancel any time. No hidden fees.</p>
+    <div class="rounded-2xl border border-indigo-500/30 bg-gradient-to-b from-indigo-900/20 to-transparent p-10">
+      <div class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3">Pro</div>
+      <div class="flex items-end justify-center gap-1 mb-1">
+        <span class="text-6xl font-black">$20</span>
+        <span class="text-slate-400 mb-2 text-lg">/mo</span>
+      </div>
+      <p class="text-slate-500 text-sm mb-8">Cancel any time.</p>
+      <ul class="text-sm text-slate-300 space-y-3 mb-8 text-left">
+        <li class="flex gap-3"><span class="text-indigo-400 font-bold">✓</span> Full profile score — all issues unlocked</li>
+        <li class="flex gap-3"><span class="text-indigo-400 font-bold">✓</span> AI interview to surface real achievements</li>
+        <li class="flex gap-3"><span class="text-indigo-400 font-bold">✓</span> AI rewrites for headline, about, every role</li>
+        <li class="flex gap-3"><span class="text-indigo-400 font-bold">✓</span> Up to 3 optimized profiles/month</li>
+        <li class="flex gap-3"><span class="text-indigo-400 font-bold">✓</span> PDF resume export</li>
+      </ul>
+      <button class="w-full py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-semibold text-base transition-all glow">Get started — $20/mo</button>
+    </div>
+  </div>
+</section>
+
+<footer class="border-t border-white/5 py-8 px-6 text-center text-xs text-slate-600">
+  My Profile Coach · © 2026 · myprofilecoach.com
+</footer>
+</body>
+</html>

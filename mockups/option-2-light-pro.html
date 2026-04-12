@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Option 2 — Light Professional</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  body { font-family: 'Inter', sans-serif; }
+  .text-gradient { background: linear-gradient(135deg, #1d4ed8 0%, #4f46e5 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero-bg { background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 50%, #faf5ff 100%); }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  .float { animation: float 4s ease-in-out infinite; }
+</style>
+</head>
+<body class="bg-white text-gray-900">
+
+<!-- NAV -->
+<nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-100 bg-white/90 backdrop-blur-xl">
+  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">M</div>
+      <span class="font-bold text-gray-900 tracking-tight">My Profile Coach</span>
+    </div>
+    <div class="flex items-center gap-6">
+      <a href="#" class="text-sm text-gray-500 hover:text-gray-900 transition-colors">How it works</a>
+      <a href="#" class="text-sm text-gray-500 hover:text-gray-900 transition-colors">Pricing</a>
+      <button class="h-9 px-5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-all shadow-md shadow-blue-500/20">Get started free</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero-bg pt-32 pb-20 px-6">
+  <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+    <div>
+      <div class="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-xs font-semibold text-blue-700 mb-8">
+        <span class="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+        Free profile score — no account needed
+      </div>
+      <h1 class="text-5xl lg:text-[56px] font-black leading-[1.1] tracking-tight mb-6 text-gray-900">
+        Land more interviews<br>with an AI-optimized<br>
+        <span class="text-gradient">LinkedIn profile.</span>
+      </h1>
+      <p class="text-xl text-gray-500 mb-10 leading-relaxed max-w-lg">
+        Recruiter AI tools score your profile before a human ever sees it. Our AI helps you win that score — in 15 minutes.
+      </p>
+      <div class="flex items-center gap-4 mb-10">
+        <button class="h-14 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-base transition-all shadow-xl shadow-blue-500/30">
+          Score my profile free →
+        </button>
+        <span class="text-sm text-gray-400">$0. No account required.</span>
+      </div>
+      <div class="flex items-center gap-8">
+        <div><div class="text-2xl font-black text-gray-900">2,400+</div><div class="text-xs text-gray-400 mt-0.5">Profiles optimized</div></div>
+        <div class="w-px h-10 bg-gray-200"></div>
+        <div><div class="text-2xl font-black text-gray-900">+43 pts</div><div class="text-xs text-gray-400 mt-0.5">Avg score lift</div></div>
+        <div class="w-px h-10 bg-gray-200"></div>
+        <div><div class="text-2xl font-black text-gray-900">15 min</div><div class="text-xs text-gray-400 mt-0.5">Start to finish</div></div>
+      </div>
+    </div>
+
+    <!-- Card -->
+    <div class="float">
+      <div class="rounded-3xl bg-white shadow-2xl shadow-blue-100/50 border border-gray-100 p-8 max-w-sm mx-auto">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Profile Score Report</div>
+        <div class="flex items-center justify-center gap-8 mb-6">
+          <div class="text-center">
+            <div class="text-6xl font-black text-gray-300 tabular-nums">38</div>
+            <div class="text-xs text-gray-400 mt-1">Before</div>
+          </div>
+          <div class="text-blue-500 text-3xl font-bold">→</div>
+          <div class="text-center">
+            <div class="text-6xl font-black text-blue-600 tabular-nums">91</div>
+            <div class="text-xs text-blue-500 mt-1 font-semibold">After</div>
+          </div>
+        </div>
+        <div class="text-center mb-6">
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200 px-4 py-1.5 text-blue-700 font-semibold text-sm">+53 points improvement</span>
+        </div>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3"><div class="w-20 text-xs text-gray-400">Headline</div><div class="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden"><div class="h-full rounded-full bg-blue-500" style="width:92%"></div></div><div class="text-xs text-blue-600 w-6 text-right font-bold">92</div></div>
+          <div class="flex items-center gap-3"><div class="w-20 text-xs text-gray-400">About</div><div class="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden"><div class="h-full rounded-full bg-blue-500" style="width:88%"></div></div><div class="text-xs text-blue-600 w-6 text-right font-bold">88</div></div>
+          <div class="flex items-center gap-3"><div class="w-20 text-xs text-gray-400">Experience</div><div class="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden"><div class="h-full rounded-full bg-blue-500" style="width:91%"></div></div><div class="text-xs text-blue-600 w-6 text-right font-bold">91</div></div>
+          <div class="flex items-center gap-3"><div class="w-20 text-xs text-gray-400">Keywords</div><div class="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden"><div class="h-full rounded-full bg-blue-500" style="width:85%"></div></div><div class="text-xs text-blue-600 w-6 text-right font-bold">85</div></div>
+          <div class="flex items-center gap-3"><div class="w-20 text-xs text-gray-400">AI Signals</div><div class="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden"><div class="h-full rounded-full bg-blue-500" style="width:90%"></div></div><div class="text-xs text-blue-600 w-6 text-right font-bold">90</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOCIAL PROOF -->
+<section class="py-16 px-6 bg-gray-50 border-y border-gray-100">
+  <div class="max-w-4xl mx-auto">
+    <p class="text-center text-sm text-gray-400 mb-8 font-medium uppercase tracking-widest">Real results from real people</p>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div class="text-2xl font-black text-blue-600 mb-1">34 → 91</div>
+        <div class="text-xs text-gray-400 mb-3 font-medium">Software Engineer</div>
+        <p class="text-sm text-gray-600 italic">"3 recruiter messages in 48 hours after I updated my profile."</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-blue-100 p-6 shadow-sm shadow-blue-50">
+        <div class="text-2xl font-black text-blue-600 mb-1">41 → 87</div>
+        <div class="text-xs text-gray-400 mb-3 font-medium">Product Manager</div>
+        <p class="text-sm text-gray-600 italic">"Got the interview at my dream company the following week."</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div class="text-2xl font-black text-blue-600 mb-1">28 → 82</div>
+        <div class="text-xs text-gray-400 mb-3 font-medium">UX Designer</div>
+        <p class="text-sm text-gray-600 italic">"Finally showing up in LinkedIn searches. Night and day difference."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="py-24 px-6">
+  <div class="max-w-5xl mx-auto text-center mb-16">
+    <h2 class="text-3xl font-black text-gray-900 mb-3">How it works</h2>
+    <p class="text-gray-500">Three steps. Fifteen minutes. A profile recruiters actually find.</p>
+  </div>
+  <div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
+    <div class="text-center">
+      <div class="w-14 h-14 rounded-2xl bg-blue-600 text-white font-black text-xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-500/30">1</div>
+      <h3 class="font-bold text-gray-900 text-lg mb-2">Paste & Score</h3>
+      <p class="text-sm text-gray-500 leading-relaxed">Paste your LinkedIn text or drop in your URL. Get an instant AI score across every section with specific issues identified.</p>
+    </div>
+    <div class="text-center">
+      <div class="w-14 h-14 rounded-2xl bg-indigo-600 text-white font-black text-xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-indigo-500/30">2</div>
+      <h3 class="font-bold text-gray-900 text-lg mb-2">AI Interviews You</h3>
+      <p class="text-sm text-gray-500 leading-relaxed">AI asks 3–5 targeted questions to surface hidden wins and quantified achievements you've never thought to include.</p>
+    </div>
+    <div class="text-center">
+      <div class="w-14 h-14 rounded-2xl bg-violet-600 text-white font-black text-xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-violet-500/30">3</div>
+      <h3 class="font-bold text-gray-900 text-lg mb-2">Review & Copy</h3>
+      <p class="text-sm text-gray-500 leading-relaxed">Review AI rewrites for every section. Approve, edit, or skip each one. Copy your optimized profile straight to LinkedIn.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="py-24 px-6 bg-gray-50">
+  <div class="max-w-md mx-auto text-center">
+    <h2 class="text-3xl font-black text-gray-900 mb-3">Simple pricing</h2>
+    <p class="text-gray-500 mb-12">One plan. Everything included. Cancel any time.</p>
+    <div class="rounded-3xl bg-white border-2 border-blue-500 p-10 shadow-2xl shadow-blue-100">
+      <div class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">Pro Plan</div>
+      <div class="flex items-end justify-center gap-1 mb-2">
+        <span class="text-6xl font-black text-gray-900">$20</span>
+        <span class="text-gray-400 mb-2 text-xl">/mo</span>
+      </div>
+      <p class="text-gray-400 text-sm mb-8">Cancel any time.</p>
+      <ul class="text-sm text-gray-700 space-y-3 mb-8 text-left">
+        <li class="flex gap-3 items-start"><span class="text-blue-500 font-bold mt-0.5">✓</span> Full score with all issues unlocked</li>
+        <li class="flex gap-3 items-start"><span class="text-blue-500 font-bold mt-0.5">✓</span> AI interview to surface real achievements</li>
+        <li class="flex gap-3 items-start"><span class="text-blue-500 font-bold mt-0.5">✓</span> AI rewrites for headline, about, every role</li>
+        <li class="flex gap-3 items-start"><span class="text-blue-500 font-bold mt-0.5">✓</span> Up to 3 optimized profiles per month</li>
+        <li class="flex gap-3 items-start"><span class="text-blue-500 font-bold mt-0.5">✓</span> PDF resume export included</li>
+      </ul>
+      <button class="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-base transition-all shadow-xl shadow-blue-500/30">Get started — $20/mo</button>
+    </div>
+  </div>
+</section>
+
+<footer class="border-t border-gray-100 py-8 px-6 text-center text-xs text-gray-400">
+  My Profile Coach · © 2026 · myprofilecoach.com
+</footer>
+</body>
+</html>
