@@ -41,14 +41,14 @@ export async function POST(request: NextRequest) {
       keywords,
     })
   } catch (err) {
-    console.error('[/api/score] error:', err)
     const msg = err instanceof Error ? err.message : String(err)
+    console.error('[/api/score] error:', msg)
     if (msg.includes('credit') || msg.includes('billing') || msg.includes('quota')) {
-      return Response.json({ error: 'Service temporarily unavailable. Please try again shortly.' }, { status: 503 })
+      return Response.json({ error: `API billing issue: ${msg.slice(0, 120)}` }, { status: 503 })
     }
     if (msg.includes('invalid JSON') || msg.includes('JSON')) {
       return Response.json({ error: 'Failed to parse profile. Please try again.' }, { status: 500 })
     }
-    return Response.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
+    return Response.json({ error: `Error: ${msg.slice(0, 120)}` }, { status: 500 })
   }
 }

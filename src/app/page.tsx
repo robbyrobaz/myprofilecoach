@@ -92,7 +92,7 @@ function HeroForm() {
           value={profileText}
           onChange={(e) => setProfileText(e.target.value)}
           placeholder="Copy everything from your LinkedIn profile — headline, about, experience bullets, skills — and paste it here..."
-          className="min-h-40 bg-slate-800/50 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20 resize-none"
+          className="min-h-40 max-h-56 overflow-y-auto bg-slate-800/50 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20 resize-none"
           disabled={loading}
         />
       </div>
