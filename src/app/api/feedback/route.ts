@@ -25,7 +25,8 @@ async function createGithubIssue(feedback: FeedbackRecord): Promise<string | nul
 
 **Message:** ${feedback.message}
 
-**Session:** \`${feedback.sessionId}\`
+**Session:** \`${feedback.sessionId || 'n/a'}\`
+**Page:** ${feedback.page ?? 'n/a'}
 **Score:** ${feedback.score ?? 'n/a'}/100
 **Target role:** ${feedback.targetRole ?? 'n/a'}
 **Stage:** ${feedback.stage ?? 'n/a'}
@@ -62,22 +63,23 @@ ${callsTable ? `### AI Call Breakdown\n\n${callsTable}` : ''}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as { sessionId: string; message: string; email?: string }
-    const { sessionId, message, email } = body
+    const body = await request.json() as { sessionId?: string; message: string; email?: string; page?: string }
+    const { sessionId, message, email, page } = body
 
-    if (!sessionId || !message?.trim()) {
-      return Response.json({ error: 'sessionId and message are required' }, { status: 400 })
+    if (!message?.trim()) {
+      return Response.json({ error: 'message is required' }, { status: 400 })
     }
 
-    // Load session context to enrich the feedback
-    const session = await getSession(sessionId)
+    // Load session context to enrich the feedback (if we have a sessionId)
+    const session = sessionId ? await getSession(sessionId) : null
 
     const feedback: FeedbackRecord = {
       id: crypto.randomUUID(),
-      sessionId,
+      sessionId: sessionId || undefined,
       createdAt: Date.now(),
       message: message.trim().slice(0, 2000),
       email: email?.trim() || undefined,
+      page: page?.trim() || undefined,
       score: session?.score?.overall,
       targetRole: session?.score?.targetRole,
       stage: session?.stage,

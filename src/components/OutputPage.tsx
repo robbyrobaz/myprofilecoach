@@ -18,80 +18,7 @@ function stripMd(text: string): string {
     .trim()
 }
 
-function FeedbackWidget({ sessionId }: { sessionId: string }) {
-  const [open, setOpen] = useState(false)
-  const [message, setMessage] = useState('')
-  const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
 
-  async function submit() {
-    if (!message.trim()) return
-    setStatus('sending')
-    try {
-      await fetch('/api/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, message, email: email || undefined }),
-      })
-      setStatus('done')
-    } catch {
-      setStatus('error')
-    }
-  }
-
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="text-xs text-slate-600 hover:text-slate-400 transition-colors underline underline-offset-2"
-      >
-        Report an issue or give feedback
-      </button>
-    )
-  }
-
-  return (
-    <div className="rounded-xl border border-slate-700 bg-slate-800/60 p-4 space-y-3 text-left">
-      <p className="text-sm font-medium text-slate-300">Send feedback</p>
-      {status === 'done' ? (
-        <p className="text-sm text-emerald-400">Thanks — we&apos;ll review this.</p>
-      ) : (
-        <>
-          <textarea
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            placeholder="What went wrong, or what could be better?"
-            rows={3}
-            className="w-full rounded-lg bg-slate-900 border border-slate-600 text-slate-100 placeholder-slate-500 text-sm p-3 resize-none focus:outline-none focus:border-indigo-500"
-          />
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="Email (optional — if you want a reply)"
-            className="w-full rounded-lg bg-slate-900 border border-slate-600 text-slate-100 placeholder-slate-500 text-sm px-3 py-2 focus:outline-none focus:border-indigo-500"
-          />
-          {status === 'error' && <p className="text-xs text-red-400">Something went wrong. Try again.</p>}
-          <div className="flex gap-2">
-            <button
-              onClick={submit}
-              disabled={status === 'sending' || !message.trim()}
-              className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium disabled:opacity-50 transition-colors"
-            >
-              {status === 'sending' ? 'Sending...' : 'Submit'}
-            </button>
-            <button
-              onClick={() => setOpen(false)}
-              className="px-4 py-2 rounded-lg text-slate-400 hover:text-slate-200 text-sm transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
 
 function CopyButton({ text, label, size = 'sm' }: { text: string; label?: string; size?: 'sm' | 'md' }) {
   const [copied, setCopied] = useState(false)
@@ -389,7 +316,6 @@ export default function OutputPage({ output, sessionId }: Props) {
           <a href="/" className="block text-sm text-slate-500 hover:text-indigo-400 transition-colors underline underline-offset-2">
             Optimize another profile →
           </a>
-          <FeedbackWidget sessionId={sessionId} />
         </div>
 
       </div>

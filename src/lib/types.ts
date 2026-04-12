@@ -19,10 +19,11 @@ export interface RunMetrics {
 // Feedback submitted by users
 export interface FeedbackRecord {
   id: string
-  sessionId: string
+  sessionId?: string
   createdAt: number
   message: string
   email?: string
+  page?: string
   score?: number
   targetRole?: string
   stage?: string
