@@ -132,6 +132,8 @@ Do three things and return combined JSON:
 
 3. SCORE: Rate this profile 0-100 for how well it targets "${targetRoles[0]}". Break down by: headline (0-20), about (0-20), experience (0-30), keywords (0-20), aiSignals (0-10). List the top 5 most critical problems.
 
+IMPORTANT for scoring: Evaluate the ENTIRE career history, not just the most recent role. If quantified achievements (revenue numbers, percentages, customer counts, deal values) appear in ANY role — even older ones — credit them in the experience score and acknowledge them in feedback. Only flag "missing metrics" if they are genuinely absent across the full profile.
+
 Return JSON:
 {
   "jobResearch": "string",
