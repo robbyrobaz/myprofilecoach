@@ -3,7 +3,7 @@ import { parseProfile, scoreProfile, emptyMetrics, mergeMetrics } from '@/lib/cl
 import { createSession, saveSession, checkFreeScoreLimit, getUser, indexScoredSession, incrStat } from '@/lib/kv'
 import { logger } from '@/lib/logger'
 
-export const maxDuration = 60 // seconds
+export const maxDuration = 120 // seconds — parse + score on large profiles can take 60-90s
 
 
 export async function POST(request: NextRequest) {

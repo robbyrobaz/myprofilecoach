@@ -4,7 +4,7 @@ import { getSession, saveSession, incrStat } from '@/lib/kv'
 import type { SuggestionCard } from '@/lib/types'
 import { logger } from '@/lib/logger'
 
-export const maxDuration = 60 // seconds
+export const maxDuration = 120 // seconds
 
 
 export async function POST(request: NextRequest) {

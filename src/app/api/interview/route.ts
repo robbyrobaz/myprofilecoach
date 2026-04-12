@@ -3,7 +3,7 @@ import { generateInterviewQuestions, emptyMetrics, mergeMetrics } from '@/lib/cl
 import { getSession, saveSession, getUser, checkAndIncrementUsage, incrStat } from '@/lib/kv'
 import { logger } from '@/lib/logger'
 
-export const maxDuration = 60 // seconds
+export const maxDuration = 120 // seconds
 
 
 export async function POST(request: NextRequest) {

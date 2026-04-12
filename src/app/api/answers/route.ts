@@ -3,7 +3,7 @@ import { processAnswers, generateSuggestionCards, emptyMetrics, mergeMetrics } f
 import { getSession, saveSession, incrStat } from '@/lib/kv'
 import { logger } from '@/lib/logger'
 
-export const maxDuration = 60 // seconds
+export const maxDuration = 120 // seconds
 
 
 export async function POST(request: NextRequest) {
