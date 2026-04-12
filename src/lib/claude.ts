@@ -33,8 +33,9 @@ function jsonResponse<T>(text: string): T {
 
 function extractText(content: Anthropic.Messages.ContentBlock[]): string {
   if (!content || content.length === 0) throw new Error('Claude returned empty response')
-  const block = content[0]
-  if (block.type !== 'text') throw new Error(`Unexpected content type: ${block.type}`)
+  // MiniMax and extended-thinking models return thinking blocks before the text block
+  const block = content.find(b => b.type === 'text')
+  if (!block || block.type !== 'text') throw new Error('No text block in response — model may only have returned a thinking block')
   return block.text
 }
 
