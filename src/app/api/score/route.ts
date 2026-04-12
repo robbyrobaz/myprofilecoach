@@ -28,7 +28,17 @@ export async function POST(request: NextRequest) {
     const session = await createSession(sessionId, profileText, targetRoles)
 
     // Run the Claude pipeline
-    const parsedProfile = await parseProfile(profileText)
+    logger.info('/api/score', 'calling parseProfile', { textLength: profileText.length })
+    let parsedProfile
+    try {
+      parsedProfile = await parseProfile(profileText)
+    } catch (parseErr) {
+      const parseMsg = parseErr instanceof Error ? parseErr.message : String(parseErr)
+      logger.error('/api/score', 'parseProfile failed', { error: parseMsg })
+      return Response.json({ error: `parse step failed: ${parseMsg.slice(0, 200)}` }, { status: 500 })
+    }
+
+    logger.info('/api/score', 'calling scoreProfile', { headline: parsedProfile.headline })
     const { jobResearch, keywords, score } = await scoreProfile(parsedProfile, targetRoles)
 
     // Update session with results
