@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { generateInterviewQuestions } from '@/lib/claude'
+import { generateInterviewQuestions, emptyMetrics, mergeMetrics } from '@/lib/claude'
 import { getSession, saveSession, getUser, checkAndIncrementUsage } from '@/lib/kv'
 import { logger } from '@/lib/logger'
 
@@ -52,19 +52,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate interview questions
-    const questions = await generateInterviewQuestions(
+    const { result: questions, log } = await generateInterviewQuestions(
       session.parsedProfile,
       session.keywords,
       session.score.targetRole
     )
+    const metrics = mergeMetrics(session.metrics ?? emptyMetrics(), log)
+    logger.info('/api/interview', 'questions generated', { sessionId, model: log.model, inputTokens: log.inputTokens, outputTokens: log.outputTokens, durationMs: log.durationMs, costUsd: log.costUsd.toFixed(5), questionCount: questions.length, totalCostUsd: metrics.totalCostUsd.toFixed(5) })
 
     // Update session
     session.userId = userEmail
     session.interviewQuestions = questions
+    session.metrics = metrics
     session.stage = 'interviewing'
     await saveSession(session)
-
-    logger.info('/api/interview', 'interview generated', { sessionId, questionCount: questions.length })
 
     return Response.json({ questions })
   } catch (err) {

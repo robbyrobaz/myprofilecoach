@@ -1,12 +1,37 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { ParsedProfile, ProfileScore, InterviewQuestion, SuggestionCard, FinalizedOutput } from './types'
+import type { ParsedProfile, ProfileScore, InterviewQuestion, SuggestionCard, FinalizedOutput, ClaudeCallLog, RunMetrics } from './types'
 
-// SDK reads ANTHROPIC_API_KEY, ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN from env automatically.
-// For MiniMax: set ANTHROPIC_API_KEY=<minimax key>, ANTHROPIC_BASE_URL=https://api.minimax.io/anthropic
 function getClient() {
   return new Anthropic()
 }
 const MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6'
+
+// Cost per million tokens (USD) — update if pricing changes
+const COST_PER_M: Record<string, { input: number; output: number }> = {
+  'claude-haiku-4-5-20251001': { input: 0.80,  output: 4.00  },
+  'claude-haiku-4-5':          { input: 0.80,  output: 4.00  },
+  'claude-sonnet-4-6':         { input: 3.00,  output: 15.00 },
+  'claude-opus-4-6':           { input: 15.00, output: 75.00 },
+}
+
+function calcCost(model: string, inputTokens: number, outputTokens: number): number {
+  const rates = COST_PER_M[model] ?? { input: 3.00, output: 15.00 }
+  return (inputTokens / 1_000_000) * rates.input + (outputTokens / 1_000_000) * rates.output
+}
+
+export function emptyMetrics(): RunMetrics {
+  return { calls: [], totalInputTokens: 0, totalOutputTokens: 0, totalCostUsd: 0, totalDurationMs: 0 }
+}
+
+export function mergeMetrics(base: RunMetrics, log: ClaudeCallLog): RunMetrics {
+  return {
+    calls: [...base.calls, log],
+    totalInputTokens: base.totalInputTokens + log.inputTokens,
+    totalOutputTokens: base.totalOutputTokens + log.outputTokens,
+    totalCostUsd: base.totalCostUsd + log.costUsd,
+    totalDurationMs: base.totalDurationMs + log.durationMs,
+  }
+}
 
 // Shared system prompt (cached by Anthropic on repeated calls)
 const SYSTEM_PROMPT = `You are an expert career coach and LinkedIn optimization specialist. You deeply understand:
@@ -29,15 +54,27 @@ function jsonResponse<T>(text: string): T {
 
 function extractText(content: Anthropic.Messages.ContentBlock[]): string {
   if (!content || content.length === 0) throw new Error('Claude returned empty response')
-  // MiniMax and extended-thinking models return thinking blocks before the text block
   const block = content.find(b => b.type === 'text')
   if (!block || block.type !== 'text') throw new Error('No text block in response — model may only have returned a thinking block')
   return block.text
 }
 
+// Instrumented Claude call — returns text + call log
+async function claudeCall(step: string, params: Anthropic.Messages.MessageCreateParamsNonStreaming): Promise<{ text: string; log: ClaudeCallLog }> {
+  const start = Date.now()
+  const msg = await getClient().messages.create(params)
+  const durationMs = Date.now() - start
+  const inputTokens = msg.usage.input_tokens
+  const outputTokens = msg.usage.output_tokens
+  const model = msg.model ?? params.model
+  const costUsd = calcCost(model, inputTokens, outputTokens)
+  const log: ClaudeCallLog = { step, model, inputTokens, outputTokens, durationMs, costUsd }
+  return { text: extractText(msg.content), log }
+}
+
 // Call 1: Parse profile
-export async function parseProfile(rawProfile: string): Promise<ParsedProfile> {
-  const msg = await getClient().messages.create({
+export async function parseProfile(rawProfile: string): Promise<{ result: ParsedProfile; log: ClaudeCallLog }> {
+  const { text, log } = await claudeCall('parseProfile', {
     model: MODEL,
     max_tokens: 4096,
     system: SYSTEM_PROMPT,
@@ -60,15 +97,15 @@ Return JSON matching this shape:
 If a field can't be found, use an empty string or empty array. Never fail — always return valid JSON with whatever career content you can extract.`
     }]
   })
-  return jsonResponse<ParsedProfile>(extractText(msg.content))
+  return { result: jsonResponse<ParsedProfile>(text), log }
 }
 
 // Call 2+3+4: Job research + keyword extraction + profile score (combined to save calls)
 export async function scoreProfile(
   parsedProfile: ParsedProfile,
   targetRoles: string[]
-): Promise<{ jobResearch: string; keywords: string[]; score: ProfileScore }> {
-  const msg = await getClient().messages.create({
+): Promise<{ jobResearch: string; keywords: string[]; score: ProfileScore; log: ClaudeCallLog }> {
+  const { text, log } = await claudeCall('scoreProfile', {
     model: MODEL,
     max_tokens: 4096,
     system: SYSTEM_PROMPT,
@@ -104,7 +141,7 @@ Return JSON:
 }`
     }]
   })
-  return jsonResponse(extractText(msg.content))
+  return { ...jsonResponse<{ jobResearch: string; keywords: string[]; score: ProfileScore }>(text), log }
 }
 
 // Calls 5-7: Generate interview questions
@@ -112,8 +149,8 @@ export async function generateInterviewQuestions(
   parsedProfile: ParsedProfile,
   keywords: string[],
   targetRole: string
-): Promise<InterviewQuestion[]> {
-  const msg = await getClient().messages.create({
+): Promise<{ result: InterviewQuestion[]; log: ClaudeCallLog }> {
+  const { text, log } = await claudeCall('generateInterviewQuestions', {
     model: MODEL,
     max_tokens: 4096,
     system: SYSTEM_PROMPT,
@@ -138,7 +175,7 @@ Return JSON array:
 [{ "roleIndex": number, "company": "string", "question": "string", "hint": "short hint e.g. 'Even a rough estimate helps'" }]`
     }]
   })
-  return jsonResponse<InterviewQuestion[]>(extractText(msg.content))
+  return { result: jsonResponse<InterviewQuestion[]>(text), log }
 }
 
 // Call 8: Process user answers into achievement language
@@ -146,10 +183,10 @@ export async function processAnswers(
   parsedProfile: ParsedProfile,
   questions: InterviewQuestion[],
   answers: Record<number, string>
-): Promise<string> {
+): Promise<{ result: string; log: ClaudeCallLog }> {
   const qa = questions.map((q, i) => `Q: ${q.question}\nA: ${answers[i] || '(skipped)'}`).join('\n\n')
 
-  const msg = await getClient().messages.create({
+  const { text, log } = await claudeCall('processAnswers', {
     model: MODEL,
     max_tokens: 2000,
     system: SYSTEM_PROMPT,
@@ -165,8 +202,8 @@ For each answer: identify the achievement, add quantification where provided or 
 Return JSON: { "achievements": ["string"] }`
     }]
   })
-  const result = jsonResponse<{ achievements: string[] }>(extractText(msg.content))
-  return result.achievements.join('\n')
+  const parsed = jsonResponse<{ achievements: string[] }>(text)
+  return { result: parsed.achievements.join('\n'), log }
 }
 
 // Calls 9-12: Generate suggestion cards
@@ -175,8 +212,8 @@ export async function generateSuggestionCards(
   keywords: string[],
   targetRole: string,
   extractedAchievements: string
-): Promise<SuggestionCard[]> {
-  const msg = await getClient().messages.create({
+): Promise<{ result: SuggestionCard[]; log: ClaudeCallLog }> {
+  const { text, log } = await claudeCall('generateSuggestionCards', {
     model: MODEL,
     max_tokens: 4096,
     system: SYSTEM_PROMPT,
@@ -206,7 +243,7 @@ Return JSON array:
 }]`
     }]
   })
-  return jsonResponse<SuggestionCard[]>(extractText(msg.content))
+  return { result: jsonResponse<SuggestionCard[]>(text), log }
 }
 
 // Call 13: Finalize output
@@ -214,13 +251,13 @@ export async function finalizeOutput(
   parsedProfile: ParsedProfile,
   cards: SuggestionCard[],
   score: ProfileScore
-): Promise<FinalizedOutput> {
+): Promise<{ result: FinalizedOutput; log: ClaudeCallLog }> {
   const approvedChanges = cards
     .filter(c => c.status === 'approved' || c.status === 'edited')
     .map(c => `${c.section}: ${c.status === 'edited' ? c.editedText : c.suggested}`)
     .join('\n')
 
-  const msg = await getClient().messages.create({
+  const { text, log } = await claudeCall('finalizeOutput', {
     model: MODEL,
     max_tokens: 4096,
     system: SYSTEM_PROMPT,
@@ -246,5 +283,5 @@ Return the complete finalized profile as JSON with a new score estimate:
 }`
     }]
   })
-  return jsonResponse<FinalizedOutput>(extractText(msg.content))
+  return { result: jsonResponse<FinalizedOutput>(text), log }
 }

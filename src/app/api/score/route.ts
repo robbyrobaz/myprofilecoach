@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { parseProfile, scoreProfile } from '@/lib/claude'
+import { parseProfile, scoreProfile, emptyMetrics, mergeMetrics } from '@/lib/claude'
 import { createSession, saveSession, checkFreeScoreLimit, getUser } from '@/lib/kv'
 import { logger } from '@/lib/logger'
 
@@ -50,28 +50,36 @@ export async function POST(request: NextRequest) {
     const session = await createSession(sessionId, profileText, targetRoles)
 
     // Run the Claude pipeline
-    logger.info('/api/score', 'calling parseProfile', { textLength: profileText.length })
+    let metrics = emptyMetrics()
+
+    logger.info('/api/score', 'calling parseProfile', { sessionId, textLength: profileText.length })
     let parsedProfile
     try {
-      parsedProfile = await parseProfile(profileText)
+      const { result, log } = await parseProfile(profileText)
+      parsedProfile = result
+      metrics = mergeMetrics(metrics, log)
+      logger.info('/api/score', 'parseProfile done', { sessionId, model: log.model, inputTokens: log.inputTokens, outputTokens: log.outputTokens, durationMs: log.durationMs, costUsd: log.costUsd.toFixed(5), headline: parsedProfile.headline, roleCount: parsedProfile.roles.length })
     } catch (parseErr) {
       const parseMsg = parseErr instanceof Error ? parseErr.message : String(parseErr)
-      logger.error('/api/score', 'parseProfile failed', { error: parseMsg })
+      logger.error('/api/score', 'parseProfile failed', { sessionId, error: parseMsg })
       return Response.json({ error: `parse step failed: ${parseMsg.slice(0, 200)}` }, { status: 500 })
     }
 
-    logger.info('/api/score', 'calling scoreProfile', { headline: parsedProfile.headline })
-    const { jobResearch, keywords, score } = await scoreProfile(parsedProfile, targetRoles)
+    logger.info('/api/score', 'calling scoreProfile', { sessionId, targetRoles })
+    const { jobResearch, keywords, score, log: scoreLog } = await scoreProfile(parsedProfile, targetRoles)
+    metrics = mergeMetrics(metrics, scoreLog)
+    logger.info('/api/score', 'scoreProfile done', { sessionId, model: scoreLog.model, inputTokens: scoreLog.inputTokens, outputTokens: scoreLog.outputTokens, durationMs: scoreLog.durationMs, costUsd: scoreLog.costUsd.toFixed(5), overallScore: score.overall })
 
     // Update session with results
     session.parsedProfile = parsedProfile
     session.jobResearch = jobResearch
     session.keywords = keywords
     session.score = score
+    session.metrics = metrics
     session.stage = 'scored'
     await saveSession(session)
 
-    logger.info('/api/score', 'session scored', { sessionId, overallScore: score.overall })
+    logger.info('/api/score', 'session complete', { sessionId, overallScore: score.overall, totalTokens: metrics.totalInputTokens + metrics.totalOutputTokens, totalCostUsd: metrics.totalCostUsd.toFixed(5), totalDurationMs: metrics.totalDurationMs })
 
     return Response.json({
       sessionId,

@@ -1,3 +1,35 @@
+// Token usage tracking
+export interface ClaudeCallLog {
+  step: string
+  model: string
+  inputTokens: number
+  outputTokens: number
+  durationMs: number
+  costUsd: number
+}
+
+export interface RunMetrics {
+  calls: ClaudeCallLog[]
+  totalInputTokens: number
+  totalOutputTokens: number
+  totalCostUsd: number
+  totalDurationMs: number
+}
+
+// Feedback submitted by users
+export interface FeedbackRecord {
+  id: string
+  sessionId: string
+  createdAt: number
+  message: string
+  email?: string
+  score?: number
+  targetRole?: string
+  stage?: string
+  metrics?: RunMetrics
+  githubIssueUrl?: string
+}
+
 // Core domain types
 
 export interface ParsedRole {
@@ -75,6 +107,9 @@ export interface SessionState {
   // output
   finalizedLinkedIn?: FinalizedOutput
   pdfGenerated?: boolean
+
+  // token/cost tracking
+  metrics?: RunMetrics
 
   // limits tracking (stored in user record, not session)
   usagePeriod?: string // YYYY-MM billing period

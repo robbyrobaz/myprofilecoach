@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { processAnswers, generateSuggestionCards } from '@/lib/claude'
+import { processAnswers, generateSuggestionCards, emptyMetrics, mergeMetrics } from '@/lib/claude'
 import { getSession, saveSession } from '@/lib/kv'
 import { logger } from '@/lib/logger'
 
@@ -44,27 +44,30 @@ export async function POST(request: NextRequest) {
     await saveSession(session)
 
     // Process answers into extracted achievements
-    const extractedAchievements = await processAnswers(
+    const { result: extractedAchievements, log: answersLog } = await processAnswers(
       session.parsedProfile,
       session.interviewQuestions,
       answers
     )
+    let metrics = mergeMetrics(session.metrics ?? emptyMetrics(), answersLog)
+    logger.info('/api/answers', 'answers processed', { sessionId, model: answersLog.model, inputTokens: answersLog.inputTokens, outputTokens: answersLog.outputTokens, durationMs: answersLog.durationMs, costUsd: answersLog.costUsd.toFixed(5) })
 
     // Generate suggestion cards
-    const cards = await generateSuggestionCards(
+    const { result: cards, log: cardsLog } = await generateSuggestionCards(
       session.parsedProfile,
       session.keywords,
       session.score.targetRole,
       extractedAchievements
     )
+    metrics = mergeMetrics(metrics, cardsLog)
+    logger.info('/api/answers', 'cards generated', { sessionId, model: cardsLog.model, inputTokens: cardsLog.inputTokens, outputTokens: cardsLog.outputTokens, durationMs: cardsLog.durationMs, costUsd: cardsLog.costUsd.toFixed(5), cardCount: cards.length, totalCostUsd: metrics.totalCostUsd.toFixed(5) })
 
     // Update session
     session.extractedAchievements = extractedAchievements
     session.suggestionCards = cards
+    session.metrics = metrics
     session.stage = 'suggestions'
     await saveSession(session)
-
-    logger.info('/api/answers', 'cards generated', { sessionId, cardCount: cards.length })
 
     return Response.json({ cards })
   } catch (err) {

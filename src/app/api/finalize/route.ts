@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { finalizeOutput } from '@/lib/claude'
+import { finalizeOutput, emptyMetrics, mergeMetrics } from '@/lib/claude'
 import { getSession, saveSession } from '@/lib/kv'
 import type { SuggestionCard } from '@/lib/types'
 import { logger } from '@/lib/logger'
@@ -39,16 +39,17 @@ export async function POST(request: NextRequest) {
     await saveSession(session)
 
     // Run finalize pipeline
-    const output = await finalizeOutput(session.parsedProfile, cards, session.score)
+    const { result: output, log } = await finalizeOutput(session.parsedProfile, cards, session.score)
+    const metrics = mergeMetrics(session.metrics ?? emptyMetrics(), log)
+    logger.info('/api/finalize', 'finalize complete', { sessionId, model: log.model, inputTokens: log.inputTokens, outputTokens: log.outputTokens, durationMs: log.durationMs, costUsd: log.costUsd.toFixed(5), afterScore: output.afterScore, totalCostUsd: metrics.totalCostUsd.toFixed(5), totalTokens: metrics.totalInputTokens + metrics.totalOutputTokens })
 
     // Update session to complete
     session.finalizedLinkedIn = output
+    session.metrics = metrics
     session.stage = 'complete'
     await saveSession(session)
 
-    logger.info('/api/finalize', 'finalize complete', { sessionId, afterScore: output.afterScore })
-
-    return Response.json({ output })
+    return Response.json({ output, metrics })
   } catch (err) {
     logger.error('/api/finalize', 'finalize failed', err)
     return Response.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
