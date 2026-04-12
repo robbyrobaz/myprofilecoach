@@ -2,14 +2,15 @@ import { kv } from '@vercel/kv'
 import type { SessionState, UserRecord } from './types'
 
 const SESSION_TTL = 60 * 60 * 24 // 24 hours
+const P = 'mpc:' // app prefix — avoids collision on shared Upstash instances
 
-// Session keys: session:{id}
+// Session keys: mpc:session:{id}
 export async function getSession(id: string): Promise<SessionState | null> {
-  return await kv.get<SessionState>(`session:${id}`)
+  return await kv.get<SessionState>(`${P}session:${id}`)
 }
 
 export async function saveSession(session: SessionState): Promise<void> {
-  await kv.set(`session:${session.id}`, session, { ex: SESSION_TTL })
+  await kv.set(`${P}session:${session.id}`, session, { ex: SESSION_TTL })
 }
 
 export async function createSession(id: string, rawProfile: string, targetRoles: string[]): Promise<SessionState> {
@@ -26,23 +27,23 @@ export async function createSession(id: string, rawProfile: string, targetRoles:
   return session
 }
 
-// User keys: user:{email}
+// User keys: mpc:user:{email}
 export async function getUser(email: string): Promise<UserRecord | null> {
-  return await kv.get<UserRecord>(`user:${email}`)
+  return await kv.get<UserRecord>(`${P}user:${email}`)
 }
 
 export async function saveUser(user: UserRecord): Promise<void> {
-  await kv.set(`user:${user.id}`, user)
+  await kv.set(`${P}user:${user.id}`, user)
 }
 
 export async function getUserByStripeId(customerId: string): Promise<UserRecord | null> {
-  const email = await kv.get<string>(`stripe:${customerId}`)
+  const email = await kv.get<string>(`${P}stripe:${customerId}`)
   if (!email) return null
   return await getUser(email)
 }
 
 export async function linkStripeCustomer(email: string, customerId: string): Promise<void> {
-  await kv.set(`stripe:${customerId}`, email)
+  await kv.set(`${P}stripe:${customerId}`, email)
 }
 
 export function getCurrentPeriod(): string {
