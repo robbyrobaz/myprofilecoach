@@ -133,7 +133,6 @@ function HeroForm() {
     }
 
     setScoring(true)
-    setLoading(false) // hide form loading state, HUD takes over
     try {
       const savedEmail = localStorage.getItem('mpc_email') ?? undefined
       let browserId = localStorage.getItem('mpc_browser_id')
@@ -158,11 +157,9 @@ function HeroForm() {
     }
   }
 
-  if (scoring) {
-    return <AnalysisHUD targetRole={targetRole} />
-  }
-
   return (
+    <>
+    {(loading || scoring) && <AnalysisHUD targetRole={targetRole || 'your target role'} />}
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Mode toggle */}
       <div className="flex rounded-lg border border-white/10 overflow-hidden">
@@ -258,6 +255,7 @@ function HeroForm() {
       </Button>
       <p className="text-xs text-center text-slate-500">No account required. Free score in 30 seconds.</p>
     </form>
+    </>
   )
 }
 
