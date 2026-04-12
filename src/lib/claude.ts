@@ -40,9 +40,9 @@ export async function parseProfile(rawProfile: string): Promise<ParsedProfile> {
     system: SYSTEM_PROMPT,
     messages: [{
       role: 'user',
-      content: `Parse this LinkedIn profile into structured JSON. Extract: headline, about section, each work experience (company, title, dates, bullet points), and skills list.
+      content: `Parse this LinkedIn profile into structured JSON. The text may be messy — copied from mobile, browser, or a bookmarklet — so it may contain navigation text, button labels ("Show more", "Connect", "Message", "Follow"), reaction counts, timestamps, ads, or other LinkedIn UI noise. Ignore all of that. Focus only on career content: headline, about/summary, work experience, education, and skills.
 
-Profile:
+Profile text (may be noisy):
 ${rawProfile}
 
 Return JSON matching this shape:
@@ -52,7 +52,9 @@ Return JSON matching this shape:
   "roles": [{ "company": "string", "title": "string", "startDate": "string", "endDate": "string", "bullets": ["string"], "rawText": "string" }],
   "skills": ["string"],
   "rawText": "string"
-}`
+}
+
+If a field can't be found, use an empty string or empty array. Never fail — always return valid JSON with whatever career content you can extract.`
     }]
   })
   return jsonResponse<ParsedProfile>(extractText(msg.content))
