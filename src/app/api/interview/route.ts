@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { generateInterviewQuestions } from '@/lib/claude'
 import { getSession, saveSession, getUser, checkAndIncrementUsage } from '@/lib/kv'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +14,8 @@ export async function POST(request: NextRequest) {
     if (!sessionId || !userEmail) {
       return Response.json({ error: 'sessionId and userEmail are required' }, { status: 400 })
     }
+
+    logger.info('/api/interview', 'interview generation started', { sessionId, userEmail: userEmail.slice(0, 3) + '***' })
 
     // Check active subscription
     const user = await getUser(userEmail)
@@ -57,9 +60,11 @@ export async function POST(request: NextRequest) {
     session.stage = 'interviewing'
     await saveSession(session)
 
+    logger.info('/api/interview', 'interview generated', { sessionId, questionCount: questions.length })
+
     return Response.json({ questions })
   } catch (err) {
-    console.error('[/api/interview] error:', err)
+    logger.error('/api/interview', 'interview generation failed', err)
     return Response.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }

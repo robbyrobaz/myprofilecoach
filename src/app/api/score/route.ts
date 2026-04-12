@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { parseProfile, scoreProfile } from '@/lib/claude'
 import { createSession, saveSession } from '@/lib/kv'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const sessionId = crypto.randomUUID()
+    logger.info('/api/score', 'scoring started', { sessionId, targetRoles })
 
     // Create session in KV with stage 'scoring'
     const session = await createSession(sessionId, profileText, targetRoles)
@@ -34,6 +36,8 @@ export async function POST(request: NextRequest) {
     session.stage = 'scored'
     await saveSession(session)
 
+    logger.info('/api/score', 'session scored', { sessionId, overallScore: score.overall })
+
     return Response.json({
       sessionId,
       score,
@@ -42,7 +46,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    console.error('[/api/score] error:', msg)
+    logger.error('/api/score', 'scoring failed', err)
     if (msg.includes('credit') || msg.includes('billing') || msg.includes('quota')) {
       return Response.json({ error: `API billing issue: ${msg.slice(0, 120)}` }, { status: 503 })
     }

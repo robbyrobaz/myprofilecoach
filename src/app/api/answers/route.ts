@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { processAnswers, generateSuggestionCards } from '@/lib/claude'
 import { getSession, saveSession } from '@/lib/kv'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +14,9 @@ export async function POST(request: NextRequest) {
     if (!sessionId) {
       return Response.json({ error: 'sessionId is required' }, { status: 400 })
     }
+
+    logger.info('/api/answers', 'answers processing started', { sessionId })
+
     if (!answers || typeof answers !== 'object') {
       return Response.json({ error: 'answers must be an object' }, { status: 400 })
     }
@@ -57,9 +61,11 @@ export async function POST(request: NextRequest) {
     session.stage = 'suggestions'
     await saveSession(session)
 
+    logger.info('/api/answers', 'cards generated', { sessionId, cardCount: cards.length })
+
     return Response.json({ cards })
   } catch (err) {
-    console.error('[/api/answers] error:', err)
+    logger.error('/api/answers', 'answers processing failed', err)
     return Response.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }

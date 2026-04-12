@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import Stripe from 'stripe'
 import { getUser, saveUser, getUserByStripeId, linkStripeCustomer, getCurrentPeriod } from '@/lib/kv'
 import type { UserRecord } from '@/lib/types'
+import { logger } from '@/lib/logger'
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
 
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
   if (!webhookSecret) {
-    console.error('[webhook] STRIPE_WEBHOOK_SECRET not configured')
+    logger.error('/api/stripe/webhook', 'STRIPE_WEBHOOK_SECRET not configured')
     return Response.json({ error: 'Webhook secret not configured' }, { status: 500 })
   }
 
@@ -28,9 +29,11 @@ export async function POST(request: NextRequest) {
   try {
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret)
   } catch (err) {
-    console.error('[webhook] signature verification failed:', err)
+    logger.error('/api/stripe/webhook', 'signature verification failed', err)
     return Response.json({ error: 'Invalid webhook signature' }, { status: 400 })
   }
+
+  logger.info('/api/stripe/webhook', 'event received', { eventType: event.type })
 
   try {
     switch (event.type) {
@@ -43,9 +46,11 @@ export async function POST(request: NextRequest) {
             : (session.customer as Stripe.Customer | null)?.id ?? null
 
         if (!email) {
-          console.warn('[webhook] checkout.session.completed missing customer email')
+          logger.warn('/api/stripe/webhook', 'checkout.session.completed missing customer email', { customerId })
           break
         }
+
+        logger.info('/api/stripe/webhook', 'checkout.session.completed', { customerId })
 
         // Link Stripe customer ID → email for future lookups
         if (customerId) {
@@ -89,9 +94,10 @@ export async function POST(request: NextRequest) {
         const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id
         const user = await getUserByStripeId(customerId)
         if (!user) {
-          console.warn(`[webhook] subscription.created: no user for customer ${customerId}`)
+          logger.warn('/api/stripe/webhook', 'subscription.created: no user for customer', { customerId })
           break
         }
+        logger.info('/api/stripe/webhook', 'subscription created', { customerId })
         user.subscriptionId = sub.id
         user.subscriptionStatus = 'active'
         await saveUser(user)
@@ -103,9 +109,10 @@ export async function POST(request: NextRequest) {
         const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id
         const user = await getUserByStripeId(customerId)
         if (!user) {
-          console.warn(`[webhook] subscription.updated: no user for customer ${customerId}`)
+          logger.warn('/api/stripe/webhook', 'subscription.updated: no user for customer', { customerId })
           break
         }
+        logger.info('/api/stripe/webhook', 'subscription updated', { customerId })
         user.subscriptionId = sub.id
 
         // Map Stripe status to our UserRecord subscription status
@@ -130,9 +137,10 @@ export async function POST(request: NextRequest) {
         const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id
         const user = await getUserByStripeId(customerId)
         if (!user) {
-          console.warn(`[webhook] subscription.deleted: no user for customer ${customerId}`)
+          logger.warn('/api/stripe/webhook', 'subscription.deleted: no user for customer', { customerId })
           break
         }
+        logger.info('/api/stripe/webhook', 'subscription deleted', { customerId })
         user.subscriptionStatus = 'canceled'
         await saveUser(user)
         break
@@ -145,7 +153,7 @@ export async function POST(request: NextRequest) {
 
     return Response.json({ received: true })
   } catch (err) {
-    console.error(`[webhook] error handling event ${event.type}:`, err)
+    logger.error('/api/stripe/webhook', 'event handler failed', err, { eventType: event.type })
     return Response.json({ error: 'Webhook handler failed' }, { status: 500 })
   }
 }

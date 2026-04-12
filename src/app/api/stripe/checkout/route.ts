@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import Stripe from 'stripe'
+import { logger } from '@/lib/logger'
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -14,6 +15,11 @@ export async function POST(request: NextRequest) {
       email?: string
       sessionId?: string
     }
+
+    logger.info('/api/stripe/checkout', 'checkout started', {
+      email: email ? email.slice(0, 3) + '***' : undefined,
+      sessionId,
+    })
 
     const priceId = process.env.STRIPE_PRICE_ID
     if (!priceId) {
@@ -47,9 +53,11 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Failed to create checkout session' }, { status: 500 })
     }
 
+    logger.info('/api/stripe/checkout', 'checkout session created', { url: checkoutSession.url })
+
     return Response.json({ url: checkoutSession.url })
   } catch (err) {
-    console.error('[/api/stripe/checkout] error:', err)
+    logger.error('/api/stripe/checkout', 'checkout failed', err)
     return Response.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }

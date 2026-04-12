@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { logger } from '@/lib/logger'
 
 function getClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -34,6 +35,8 @@ export async function POST(request: NextRequest) {
     if (!reason) {
       return Response.json({ error: 'reason is required' }, { status: 400 })
     }
+
+    logger.info('/api/stripe/cancel', 'cancel flow started', { reason })
 
     let result: CancelResponse
 
@@ -115,9 +118,11 @@ Return JSON:
         return Response.json({ error: 'Invalid reason' }, { status: 400 })
     }
 
+    logger.info('/api/stripe/cancel', 'cancel response generated', { reason, action: result.action })
+
     return Response.json(result)
   } catch (err) {
-    console.error('[/api/stripe/cancel] error:', err)
+    logger.error('/api/stripe/cancel', 'cancel flow failed', err)
     return Response.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }

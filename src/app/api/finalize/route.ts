@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { finalizeOutput } from '@/lib/claude'
 import { getSession, saveSession } from '@/lib/kv'
 import type { SuggestionCard } from '@/lib/types'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +15,9 @@ export async function POST(request: NextRequest) {
     if (!sessionId) {
       return Response.json({ error: 'sessionId is required' }, { status: 400 })
     }
+
+    logger.info('/api/finalize', 'finalize started', { sessionId })
+
     if (!Array.isArray(cards)) {
       return Response.json({ error: 'cards must be an array' }, { status: 400 })
     }
@@ -39,9 +43,11 @@ export async function POST(request: NextRequest) {
     session.stage = 'complete'
     await saveSession(session)
 
+    logger.info('/api/finalize', 'finalize complete', { sessionId, afterScore: output.afterScore })
+
     return Response.json({ output })
   } catch (err) {
-    console.error('[/api/finalize] error:', err)
+    logger.error('/api/finalize', 'finalize failed', err)
     return Response.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }

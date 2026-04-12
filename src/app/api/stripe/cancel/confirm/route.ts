@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import Stripe from 'stripe'
 import { getUser } from '@/lib/kv'
+import { logger } from '@/lib/logger'
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -25,6 +26,8 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'action must be one of: cancel, pause, discount' }, { status: 400 })
     }
 
+    logger.info('/api/stripe/cancel/confirm', 'cancel confirm started', { action })
+
     const stripe = getStripe()
     const user = await getUser(email)
     if (!user) {
@@ -41,6 +44,7 @@ export async function POST(request: NextRequest) {
         await stripe.subscriptions.update(subId, {
           cancel_at_period_end: true,
         })
+        logger.info('/api/stripe/cancel/confirm', 'subscription cancel scheduled', { action })
         return Response.json({
           success: true,
           message:
@@ -52,6 +56,7 @@ export async function POST(request: NextRequest) {
         await stripe.subscriptions.update(subId, {
           pause_collection: { behavior: 'void' },
         })
+        logger.info('/api/stripe/cancel/confirm', 'subscription paused', { action })
         return Response.json({
           success: true,
           message:
@@ -69,6 +74,7 @@ export async function POST(request: NextRequest) {
         await stripe.subscriptions.update(subId, {
           discounts: [{ coupon: coupon.id }],
         })
+        logger.info('/api/stripe/cancel/confirm', 'retention discount applied', { action })
         return Response.json({
           success: true,
           message:
@@ -77,7 +83,7 @@ export async function POST(request: NextRequest) {
       }
     }
   } catch (err) {
-    console.error('[/api/stripe/cancel/confirm] error:', err)
+    logger.error('/api/stripe/cancel/confirm', 'cancel confirm failed', err)
     return Response.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
