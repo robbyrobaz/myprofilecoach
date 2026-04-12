@@ -20,22 +20,23 @@ export async function POST(request: NextRequest) {
 
     logger.info('/api/interview', 'interview generation started', { sessionId, userEmail: userEmail.slice(0, 3) + '***' })
 
-    // Check active subscription
-    const user = await getUser(userEmail)
-    if (!user || user.subscriptionStatus !== 'active') {
-      return Response.json(
-        { error: 'Active subscription required to access interview questions' },
-        { status: 403 }
-      )
-    }
-
-    // Check and increment session usage
-    const usageResult = await checkAndIncrementUsage(userEmail, 'session')
-    if (!usageResult.allowed) {
-      return Response.json(
-        { error: 'Session limit reached for this billing period' },
-        { status: 403 }
-      )
+    // Check active subscription (skip in bypass mode)
+    const bypassAuth = process.env.BYPASS_AUTH === 'true'
+    if (!bypassAuth) {
+      const user = await getUser(userEmail)
+      if (!user || user.subscriptionStatus !== 'active') {
+        return Response.json(
+          { error: 'Active subscription required to access interview questions' },
+          { status: 403 }
+        )
+      }
+      const usageResult = await checkAndIncrementUsage(userEmail, 'session')
+      if (!usageResult.allowed) {
+        return Response.json(
+          { error: 'Session limit reached for this billing period' },
+          { status: 403 }
+        )
+      }
     }
 
     // Load session
