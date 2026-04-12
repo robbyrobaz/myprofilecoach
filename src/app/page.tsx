@@ -1,65 +1,267 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
+
+function ScorePreview() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="relative mx-auto max-w-xs">
+      <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-6 backdrop-blur-sm">
+        <div className="mb-4 text-center text-sm font-medium text-slate-400 uppercase tracking-widest">
+          Profile Score
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <div className="text-center">
+            <div className="text-5xl font-bold text-slate-500 tabular-nums">41</div>
+            <div className="text-xs text-slate-500 mt-1">Before</div>
+          </div>
+          <div className="text-2xl text-indigo-400 font-bold">→</div>
+          <div className="text-center">
+            <div className="text-5xl font-bold text-indigo-400 tabular-nums">87</div>
+            <div className="text-xs text-indigo-400 mt-1">After</div>
+          </div>
         </div>
-      </main>
+        <div className="space-y-2">
+          {[
+            { label: 'Headline', after: 90 },
+            { label: 'About', after: 85 },
+            { label: 'Experience', after: 88 },
+            { label: 'Keywords', after: 82 },
+          ].map((row) => (
+            <div key={row.label} className="flex items-center gap-2">
+              <div className="w-20 text-xs text-slate-400">{row.label}</div>
+              <div className="flex-1 h-1.5 rounded-full bg-slate-700 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-indigo-500"
+                  style={{ width: `${row.after}%` }}
+                />
+              </div>
+              <div className="text-xs text-indigo-400 w-6 text-right">{row.after}</div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
-  );
+  )
+}
+
+function HeroForm() {
+  const router = useRouter()
+  const [profileText, setProfileText] = useState('')
+  const [targetRole, setTargetRole] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!profileText.trim() || !targetRole.trim()) {
+      setError('Please paste your LinkedIn profile and enter a target role.')
+      return
+    }
+    setError('')
+    setLoading(true)
+    try {
+      const res = await fetch('/api/score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileText, targetRoles: [targetRole] }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error((data as { error?: string })?.error ?? 'Failed to score profile')
+      }
+      const data = (await res.json()) as { sessionId: string }
+      router.push(`/session/${data.sessionId}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-slate-300 mb-2">
+          Paste your LinkedIn profile text
+        </label>
+        <Textarea
+          value={profileText}
+          onChange={(e) => setProfileText(e.target.value)}
+          placeholder="Copy everything from your LinkedIn profile — headline, about, experience bullets, skills — and paste it here..."
+          className="min-h-40 bg-slate-800/50 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20 resize-none"
+          disabled={loading}
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-300 mb-2">
+          What role are you targeting?
+        </label>
+        <Input
+          value={targetRole}
+          onChange={(e) => setTargetRole(e.target.value)}
+          placeholder="e.g. Senior Product Manager at a Series B startup"
+          className="h-11 bg-slate-800/50 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20"
+          disabled={loading}
+        />
+      </div>
+      {error && (
+        <p className="text-sm text-red-400">{error}</p>
+      )}
+      <Button
+        type="submit"
+        disabled={loading}
+        className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-base rounded-xl transition-all disabled:opacity-60"
+      >
+        {loading ? (
+          <span className="flex items-center gap-3">
+            <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            Analyzing your profile... (5–10 sec)
+          </span>
+        ) : (
+          'Get my free score →'
+        )}
+      </Button>
+      <p className="text-xs text-center text-slate-500">Free score. No account required.</p>
+    </form>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <div className="min-h-screen bg-slate-900 text-slate-100">
+
+      {/* Hero */}
+      <section className="relative overflow-hidden pt-20 pb-16 px-4">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/30 via-slate-900 to-violet-900/20 pointer-events-none" />
+        <div className="relative mx-auto max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-300 mb-6">
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
+                Free profile score in 10 seconds
+              </div>
+              <h1 className="text-4xl sm:text-5xl font-bold leading-tight tracking-tight mb-6">
+                Recruiters use AI to find candidates.{' '}
+                <span className="text-indigo-400">Are you using AI to be found?</span>
+              </h1>
+              <p className="text-lg text-slate-400 mb-8 leading-relaxed">
+                Paste your LinkedIn profile and get an instant AI-powered score. Then let Claude interview you and rewrite your profile to land in recruiter searches — in under 15 minutes.
+              </p>
+              <div className="rounded-2xl border border-slate-700 bg-slate-800/40 p-6 backdrop-blur-sm">
+                <HeroForm />
+              </div>
+            </div>
+            <div className="hidden lg:block">
+              <ScorePreview />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="py-20 px-4 border-t border-slate-800">
+        <div className="mx-auto max-w-4xl text-center mb-12">
+          <h2 className="text-3xl font-bold mb-3">How it works</h2>
+          <p className="text-slate-400">Three steps to a profile that actually gets you found.</p>
+        </div>
+        <div className="mx-auto max-w-4xl grid md:grid-cols-3 gap-6">
+          {[
+            {
+              step: '01',
+              title: 'Paste & Score',
+              desc: 'Paste your LinkedIn text. Our AI scores every section — headline, about, experience bullets, keyword density — against recruiter search patterns.',
+              accent: 'text-indigo-400',
+            },
+            {
+              step: '02',
+              title: 'Claude Interviews You',
+              desc: 'Claude asks 3–5 targeted questions about your real achievements and impact. You answer in your own words — no fluff needed.',
+              accent: 'text-violet-400',
+            },
+            {
+              step: '03',
+              title: 'Get Your Optimized Profile',
+              desc: 'Review AI-generated rewrites for every section. Approve, edit, or skip each one. Copy your polished profile straight to LinkedIn.',
+              accent: 'text-emerald-400',
+            },
+          ].map((item) => (
+            <Card key={item.step} className="bg-slate-800/50 border-slate-700 text-slate-100">
+              <CardContent className="pt-6 pb-6">
+                <div className={`text-4xl font-bold ${item.accent} mb-4`}>{item.step}</div>
+                <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">{item.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Social proof strip */}
+      <section className="py-12 px-4 bg-slate-800/30 border-y border-slate-800">
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="text-slate-400 text-sm mb-6">People who optimized their profile</p>
+          <div className="grid sm:grid-cols-3 gap-6">
+            {[
+              { score: '34 → 91', role: 'Software Engineer', note: '"3 recruiter messages in 2 days after optimizing."' },
+              { score: '41 → 87', role: 'Product Manager', note: '"Got the interview at my dream company."' },
+              { score: '28 → 82', role: 'UX Designer', note: '"Finally showing up in LinkedIn searches."' },
+            ].map((item) => (
+              <div key={item.role} className="rounded-xl border border-slate-700 bg-slate-800/50 p-5 text-left">
+                <div className="text-2xl font-bold text-indigo-400 mb-1">{item.score}</div>
+                <div className="text-xs text-slate-500 mb-3">{item.role}</div>
+                <p className="text-sm text-slate-300 italic">{item.note}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className="py-20 px-4">
+        <div className="mx-auto max-w-md text-center">
+          <h2 className="text-3xl font-bold mb-3">Simple pricing</h2>
+          <p className="text-slate-400 mb-10">One plan. Full access. Cancel any time.</p>
+          <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-indigo-900/30 to-slate-800/60 p-8">
+            <div className="mb-2 text-sm font-medium text-indigo-300 uppercase tracking-widest">Pro</div>
+            <div className="flex items-end justify-center gap-1 mb-2">
+              <span className="text-5xl font-bold">$20</span>
+              <span className="text-slate-400 mb-2">/mo</span>
+            </div>
+            <p className="text-sm text-slate-400 mb-8">Cancel any time. No fluff.</p>
+            <ul className="text-sm text-slate-300 space-y-3 mb-8 text-left">
+              {[
+                'Full profile score with all issues unlocked',
+                'Claude interview to surface your real achievements',
+                'AI rewrites for headline, about, every role',
+                'Up to 3 optimized profiles per month',
+                'PDF resume export (coming soon)',
+                'Manual refresh when you update your profile',
+              ].map((feat) => (
+                <li key={feat} className="flex items-start gap-2">
+                  <span className="text-indigo-400 mt-0.5">✓</span>
+                  <span>{feat}</span>
+                </li>
+              ))}
+            </ul>
+            <Button className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base">
+              Get started — $20/mo
+            </Button>
+            <p className="text-xs text-slate-500 mt-3">Powered by Claude. Your data is never sold.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-800 py-8 px-4 text-center text-xs text-slate-600">
+        LinkedIn AI Optimizer · Built with Claude · &copy; {new Date().getFullYear()}
+      </footer>
+    </div>
+  )
 }

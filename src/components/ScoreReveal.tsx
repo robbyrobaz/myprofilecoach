@@ -1,0 +1,242 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import type { ProfileScore } from '@/lib/types'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+
+interface Props {
+  score: ProfileScore
+  sessionId: string
+  keywords: string[]
+}
+
+function AnimatedScore({ target }: { target: number }) {
+  const [displayed, setDisplayed] = useState(0)
+
+  useEffect(() => {
+    let start = 0
+    const duration = 1000
+    const step = 16
+    const increment = target / (duration / step)
+
+    const timer = setInterval(() => {
+      start += increment
+      if (start >= target) {
+        setDisplayed(target)
+        clearInterval(timer)
+      } else {
+        setDisplayed(Math.floor(start))
+      }
+    }, step)
+
+    return () => clearInterval(timer)
+  }, [target])
+
+  return <span>{displayed}</span>
+}
+
+function ScoreBar({ label, value }: { label: string; value: number }) {
+  const color =
+    value >= 70 ? 'bg-emerald-500' : value >= 45 ? 'bg-yellow-500' : 'bg-red-500'
+
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-sm">
+        <span className="text-slate-300 capitalize">{label}</span>
+        <span className="font-medium text-slate-200 tabular-nums">{value}/100</span>
+      </div>
+      <div className="h-2 rounded-full bg-slate-700 overflow-hidden">
+        <div
+          className={`h-full rounded-full ${color} transition-all duration-700`}
+          style={{ width: `${value}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
+export default function ScoreReveal({ score, sessionId, keywords }: Props) {
+  const router = useRouter()
+  const [isSubscribed, setIsSubscribed] = useState(false)
+
+  useEffect(() => {
+    const token = localStorage.getItem('linkedin_optimizer_token')
+    if (token) setIsSubscribed(true)
+  }, [])
+
+  async function handleCheckout() {
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      })
+      const data = (await res.json()) as { url?: string }
+      if (data.url) window.location.href = data.url
+    } catch {
+      // silently fail — UI will stay visible
+    }
+  }
+
+  function handleStartInterview() {
+    router.push(`/session/${sessionId}?stage=interviewing`)
+    router.refresh()
+  }
+
+  const overallColor =
+    score.overall >= 70
+      ? 'text-emerald-400'
+      : score.overall >= 45
+      ? 'text-yellow-400'
+      : 'text-red-400'
+
+  const visibleKeywords = keywords.slice(0, 3)
+  const hiddenCount = Math.max(0, keywords.length - 3)
+
+  return (
+    <div className="min-h-screen bg-slate-900 text-slate-100 px-4 py-12">
+      <div className="mx-auto max-w-2xl space-y-8">
+
+        {/* Score hero */}
+        <div className="text-center">
+          <p className="text-slate-400 text-sm uppercase tracking-widest mb-2">Your LinkedIn Score</p>
+          <div className={`text-8xl font-bold tabular-nums ${overallColor} mb-2`}>
+            <AnimatedScore target={score.overall} />
+          </div>
+          <p className="text-slate-400 text-sm">out of 100</p>
+          <p className="mt-3 text-slate-300 text-base">
+            Target role:{' '}
+            <span className="font-medium text-indigo-300">{score.targetRole}</span>
+          </p>
+        </div>
+
+        {/* Breakdown */}
+        <Card className="bg-slate-800/60 border-slate-700">
+          <CardContent className="pt-6 pb-6 space-y-4">
+            <h2 className="font-semibold text-slate-200 mb-4">Score Breakdown</h2>
+            <ScoreBar label="Headline" value={score.breakdown.headline} />
+            <ScoreBar label="About / Summary" value={score.breakdown.about} />
+            <ScoreBar label="Experience Bullets" value={score.breakdown.experience} />
+            <ScoreBar label="Keyword Coverage" value={score.breakdown.keywords} />
+            <ScoreBar label="AI Visibility Signals" value={score.breakdown.aiSignals} />
+          </CardContent>
+        </Card>
+
+        {/* Top problems */}
+        <Card className="bg-slate-800/60 border-slate-700">
+          <CardContent className="pt-6 pb-6">
+            <h2 className="font-semibold text-slate-200 mb-4">
+              Critical Issues Found
+            </h2>
+            <ul className="space-y-3">
+              {score.topProblems.map((problem, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="mt-0.5 flex-shrink-0 h-5 w-5 rounded-full bg-red-500/20 text-red-400 text-xs flex items-center justify-center font-bold">
+                    !
+                  </span>
+                  <span className="text-slate-300 text-sm leading-relaxed">{problem}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* Lock wall */}
+            {!isSubscribed && (
+              <div className="mt-6 rounded-xl border border-slate-600 bg-slate-900/60 p-4 relative overflow-hidden">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-slate-400 text-sm">
+                    <span className="font-semibold text-slate-200">2 more critical issues</span> found in your profile
+                  </span>
+                  <Badge variant="outline" className="text-xs border-slate-600 text-slate-400">Locked</Badge>
+                </div>
+                <div className="space-y-2 opacity-30 select-none blur-[3px]">
+                  <div className="h-4 rounded bg-slate-600 w-3/4" />
+                  <div className="h-4 rounded bg-slate-600 w-1/2" />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-slate-500 text-xs">Unlock with Pro</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Keyword preview */}
+        <Card className="bg-slate-800/60 border-slate-700">
+          <CardContent className="pt-6 pb-6">
+            <h2 className="font-semibold text-slate-200 mb-1">Keyword Gap Analysis</h2>
+            <p className="text-slate-400 text-sm mb-4">
+              Keywords recruiters search for that are missing from your profile
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {visibleKeywords.map((kw) => (
+                <Badge key={kw} variant="outline" className="border-red-500/40 text-red-300 bg-red-500/10 text-xs">
+                  {kw}
+                </Badge>
+              ))}
+              {hiddenCount > 0 && (
+                <div className="relative">
+                  <div className="flex flex-wrap gap-2 blur-sm select-none pointer-events-none">
+                    {Array.from({ length: Math.min(hiddenCount, 5) }).map((_, i) => (
+                      <Badge key={i} variant="outline" className="border-slate-600 text-slate-500 text-xs">
+                        keyword
+                      </Badge>
+                    ))}
+                  </div>
+                  {!isSubscribed && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded">
+                        +{hiddenCount} more hidden
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* CTA */}
+        {isSubscribed ? (
+          <div className="text-center space-y-3">
+            <p className="text-slate-400 text-sm">You have an active subscription.</p>
+            <Button
+              onClick={handleStartInterview}
+              className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base"
+            >
+              Start Interview with Claude →
+            </Button>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-indigo-900/30 to-slate-800/60 p-8 text-center space-y-4">
+            <h3 className="text-xl font-bold text-slate-100">Fix your profile — fully</h3>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              Claude will interview you, surface your real achievements, and rewrite every section of your LinkedIn profile to rank in recruiter searches.
+            </p>
+            <ul className="text-sm text-slate-300 space-y-2 text-left max-w-xs mx-auto">
+              {[
+                'All critical issues unlocked',
+                'Full keyword gap list (20+ terms)',
+                'Claude interview + profile rewrite',
+                'Copy-paste ready output',
+              ].map((f) => (
+                <li key={f} className="flex items-center gap-2">
+                  <span className="text-indigo-400">✓</span> {f}
+                </li>
+              ))}
+            </ul>
+            <Button
+              onClick={handleCheckout}
+              className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base"
+            >
+              Fix my profile — $20/mo, cancel anytime
+            </Button>
+            <p className="text-xs text-slate-500">Stripe secure checkout. Cancel any time.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
