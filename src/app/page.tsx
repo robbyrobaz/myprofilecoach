@@ -93,14 +93,20 @@ function HeroForm() {
 
     setLoadingMsg('Analyzing your profile... (10–20 sec)')
     try {
+      const savedEmail = localStorage.getItem('mpc_email') ?? undefined
+      let browserId = localStorage.getItem('mpc_browser_id')
+      if (!browserId) {
+        browserId = crypto.randomUUID()
+        localStorage.setItem('mpc_browser_id', browserId)
+      }
       const res = await fetch('/api/score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profileText: text, targetRoles: [targetRole] }),
+        body: JSON.stringify({ profileText: text, targetRoles: [targetRole], email: savedEmail, browserId }),
       })
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error((data as { error?: string })?.error ?? 'Failed to score profile')
+        const data = await res.json().catch(() => ({})) as { error?: string; rateLimited?: boolean }
+        throw new Error(data?.error ?? 'Failed to score profile')
       }
       const data = (await res.json()) as { sessionId: string }
       router.push(`/session/${data.sessionId}`)

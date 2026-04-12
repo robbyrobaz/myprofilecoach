@@ -53,6 +53,23 @@ export async function linkStripeCustomer(email: string, customerId: string): Pro
   await kv.set(`${P}stripe:${customerId}`, email)
 }
 
+// Free score rate limiting — 2 scores per browser ID per 24 hours
+const FREE_SCORE_LIMIT = 2
+const FREE_SCORE_TTL = 60 * 60 * 24 // 24 hours
+
+export async function checkFreeScoreLimit(browserId: string): Promise<{ allowed: boolean; used: number; limit: number }> {
+  // Sanitize to prevent key injection
+  const safeId = browserId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64)
+  if (!safeId) return { allowed: false, used: FREE_SCORE_LIMIT, limit: FREE_SCORE_LIMIT }
+  const key = `${P}free_scores:${safeId}`
+  const used = (await kv.get<number>(key)) ?? 0
+  if (used >= FREE_SCORE_LIMIT) {
+    return { allowed: false, used, limit: FREE_SCORE_LIMIT }
+  }
+  await kv.set(key, used + 1, { ex: FREE_SCORE_TTL })
+  return { allowed: true, used: used + 1, limit: FREE_SCORE_LIMIT }
+}
+
 export function getCurrentPeriod(): string {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
