@@ -1,59 +1,67 @@
 import { NextRequest } from 'next/server'
 import { getSession } from '@/lib/kv'
-import { renderToBuffer, Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer'
-import type { FinalizedOutput } from '@/lib/types'
+import { renderToBuffer, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import type { FinalizedOutput, ParsedProfile } from '@/lib/types'
 
 export const maxDuration = 60
 
-// Register a clean sans-serif font stack (Helvetica is built-in to PDF spec)
 const styles = StyleSheet.create({
   page: {
     fontFamily: 'Helvetica',
     fontSize: 10,
-    paddingTop: 48,
-    paddingBottom: 48,
-    paddingHorizontal: 52,
+    paddingTop: 44,
+    paddingBottom: 52,
+    paddingHorizontal: 48,
     backgroundColor: '#ffffff',
     color: '#1a1a1a',
   },
+  // Header
+  header: { marginBottom: 10 },
   name: {
-    fontSize: 22,
+    fontSize: 20,
     fontFamily: 'Helvetica-Bold',
-    marginBottom: 2,
-    color: '#1a1a1a',
-    letterSpacing: 0.5,
+    color: '#111827',
+    letterSpacing: 0.3,
+    marginBottom: 3,
   },
-  headline: {
-    fontSize: 11,
-    color: '#4f46e5',
-    marginBottom: 12,
-    fontFamily: 'Helvetica-Oblique',
-  },
-  divider: {
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#4f46e5',
-    marginBottom: 14,
-  },
-  sectionTitle: {
-    fontSize: 9,
-    fontFamily: 'Helvetica-Bold',
-    color: '#6366f1',
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-    marginBottom: 6,
-    marginTop: 14,
-  },
-  about: {
+  tagline: {
     fontSize: 10,
-    color: '#374151',
-    lineHeight: 1.55,
+    color: '#4f46e5',
+    marginBottom: 10,
+    lineHeight: 1.3,
   },
-  roleHeader: {
+  headerDivider: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#4f46e5',
+    marginBottom: 0,
+  },
+  // Section
+  sectionTitle: {
+    fontSize: 8.5,
+    fontFamily: 'Helvetica-Bold',
+    color: '#4f46e5',
+    textTransform: 'uppercase',
+    letterSpacing: 1.8,
+    marginBottom: 5,
+    marginTop: 12,
+    paddingBottom: 2,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#e5e7eb',
+  },
+  // Summary — strip to first 2 "paragraphs" only (avoid walls of text)
+  summary: {
+    fontSize: 9.5,
+    color: '#374151',
+    lineHeight: 1.5,
+    marginBottom: 2,
+  },
+  // Role
+  roleBlock: { marginTop: 7, marginBottom: 2 },
+  roleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginTop: 8,
-    marginBottom: 3,
+    marginBottom: 1,
   },
   roleTitle: {
     fontSize: 10.5,
@@ -61,100 +69,163 @@ const styles = StyleSheet.create({
     color: '#111827',
     flex: 1,
   },
-  roleCompany: {
-    fontSize: 10,
+  roleDates: {
+    fontSize: 9,
     color: '#6b7280',
+    fontFamily: 'Helvetica',
+    flexShrink: 0,
+    marginLeft: 8,
+  },
+  roleCompany: {
+    fontSize: 9.5,
+    color: '#4f46e5',
     fontFamily: 'Helvetica-Oblique',
+    marginBottom: 4,
   },
   bullet: {
     flexDirection: 'row',
-    marginBottom: 3,
-    paddingLeft: 4,
+    marginBottom: 2.5,
+    paddingLeft: 2,
   },
   bulletDot: {
-    fontSize: 10,
-    color: '#4f46e5',
-    marginRight: 6,
-    marginTop: 1,
+    fontSize: 9,
+    color: '#6366f1',
+    marginRight: 5,
+    marginTop: 0.5,
+    flexShrink: 0,
   },
   bulletText: {
-    fontSize: 10,
+    fontSize: 9.5,
     color: '#374151',
-    lineHeight: 1.45,
+    lineHeight: 1.4,
     flex: 1,
   },
-  roleDivider: {
+  roleSeparator: {
     borderBottomWidth: 0.5,
-    borderBottomColor: '#e5e7eb',
-    marginTop: 8,
+    borderBottomColor: '#f3f4f6',
+    marginTop: 6,
   },
+  // Footer
   footer: {
     position: 'absolute',
-    bottom: 24,
-    left: 52,
-    right: 52,
+    bottom: 20,
+    left: 48,
+    right: 48,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    borderTopWidth: 0.5,
+    borderTopColor: '#e5e7eb',
+    paddingTop: 4,
   },
   footerText: {
-    fontSize: 8,
+    fontSize: 7.5,
     color: '#9ca3af',
   },
 })
 
-function ResumePDF({ output }: { output: FinalizedOutput }) {
-  // Extract name from headline if possible (first part before |)
-  const namePart = output.headline.split('|')[0].trim()
+// Strip markdown bold/italic, clean bullet chars, trim whitespace
+function clean(text: string): string {
+  return text
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    .replace(/^[•·]\s*/g, '')
+    .replace(/^\s*[-–]\s*/g, '')
+    .trim()
+}
+
+// Shorten About to just the opening paragraph + core competencies line
+// to avoid a wall-of-text summary block
+function summarize(about: string): string {
+  const cleaned = clean(about)
+  // Split on double newline or "Core Competencies" or "Track Record"
+  const sections = cleaned.split(/\n\n+/)
+  // Take first paragraph only (opening statement)
+  const first = sections[0]?.trim() ?? ''
+  // Find a "Core Competencies" line for keyword density
+  const compLine = sections.find(s => s.toLowerCase().includes('core competencies') || s.toLowerCase().includes('competencies:'))
+  if (compLine) {
+    return first + '\n\n' + compLine.trim()
+  }
+  // Otherwise just first ~400 chars
+  return first.slice(0, 450)
+}
+
+function ResumePDF({ output, parsed }: { output: FinalizedOutput; parsed: ParsedProfile | null }) {
+  const headlineParts = output.headline.split('|').map(p => p.trim())
+  const namePart = headlineParts[0]
   const isName = namePart.split(' ').length <= 4 && !namePart.includes('@')
   const displayName = isName ? namePart : 'Professional Resume'
-  const displayHeadline = isName ? output.headline.replace(namePart + ' | ', '') : output.headline
+  const displayTagline = isName ? headlineParts.slice(1).join(' | ') : output.headline
+
+  // Build a date lookup from parsedProfile: company → { start, end }
+  const dateMap: Record<string, { startDate: string; endDate: string }> = {}
+  if (parsed?.roles) {
+    for (const r of parsed.roles) {
+      const key = r.company.toLowerCase().trim()
+      if (!dateMap[key]) {
+        dateMap[key] = { startDate: r.startDate, endDate: r.endDate }
+      }
+    }
+  }
+
+  const summaryText = summarize(output.about ?? '')
 
   return (
     <Document>
-      <Page size="LETTER" style={styles.page}>
+      <Page size="LETTER" style={styles.page} wrap>
         {/* Header */}
-        <Text style={styles.name}>{displayName}</Text>
-        <Text style={styles.headline}>{displayHeadline}</Text>
-        <View style={styles.divider} />
+        <View style={styles.header}>
+          <Text style={styles.name}>{displayName}</Text>
+          <Text style={styles.tagline}>{displayTagline}</Text>
+          <View style={styles.headerDivider} />
+        </View>
 
-        {/* About */}
-        {output.about ? (
+        {/* Professional Summary */}
+        {summaryText ? (
           <>
             <Text style={styles.sectionTitle}>Professional Summary</Text>
-            <Text style={styles.about}>{output.about.replace(/\*\*/g, '').replace(/\*/g, '')}</Text>
+            <Text style={styles.summary}>{summaryText}</Text>
           </>
         ) : null}
 
         {/* Experience */}
-        {output.roles && output.roles.length > 0 ? (
+        {output.roles && output.roles.length > 0 && (
           <>
             <Text style={styles.sectionTitle}>Experience</Text>
-            {output.roles.map((role, i) => (
-              <View key={i}>
-                <View style={styles.roleHeader}>
-                  <View>
-                    <Text style={styles.roleTitle}>{role.title}</Text>
-                    <Text style={styles.roleCompany}>{role.company}</Text>
+            {output.roles.map((role, i) => {
+              const key = role.company.toLowerCase().trim()
+              const dates = dateMap[key]
+              const dateStr = dates
+                ? [dates.startDate, dates.endDate || 'Present'].filter(Boolean).join(' – ')
+                : ''
+
+              return (
+                <View key={i} style={styles.roleBlock} wrap={false}>
+                  <View style={styles.roleRow}>
+                    <Text style={styles.roleTitle}>{clean(role.title)}</Text>
+                    {dateStr ? <Text style={styles.roleDates}>{dateStr}</Text> : null}
                   </View>
+                  <Text style={styles.roleCompany}>{role.company}</Text>
+                  {role.bullets.map((bullet, j) => (
+                    <View key={j} style={styles.bullet}>
+                      <Text style={styles.bulletDot}>▪</Text>
+                      <Text style={styles.bulletText}>{clean(bullet)}</Text>
+                    </View>
+                  ))}
+                  {i < output.roles.length - 1 && <View style={styles.roleSeparator} />}
                 </View>
-                {role.bullets.map((bullet, j) => (
-                  <View key={j} style={styles.bullet}>
-                    <Text style={styles.bulletDot}>•</Text>
-                    <Text style={styles.bulletText}>{bullet.replace(/^\•\s*/, '').replace(/\*\*/g, '')}</Text>
-                  </View>
-                ))}
-                {i < output.roles.length - 1 && <View style={styles.roleDivider} />}
-              </View>
-            ))}
+              )
+            })}
           </>
-        ) : null}
+        )}
 
         {/* Footer */}
         <View style={styles.footer} fixed>
           <Text style={styles.footerText}>Generated by myprofilecoach.com</Text>
-          <Text style={styles.footerText} render={({ pageNumber, totalPages }) =>
-            `${pageNumber} / ${totalPages}`
-          } />
+          <Text
+            style={styles.footerText}
+            render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
+          />
         </View>
       </Page>
     </Document>
@@ -174,12 +245,16 @@ export async function POST(request: NextRequest) {
       return new Response('Session or finalized output not found', { status: 404 })
     }
 
-    const output = session.finalizedLinkedIn
+    const buffer = await renderToBuffer(
+      <ResumePDF output={session.finalizedLinkedIn} parsed={session.parsedProfile ?? null} />
+    )
 
-    const buffer = await renderToBuffer(<ResumePDF output={output} />)
-
-    const namePart = output.headline.split('|')[0].trim().replace(/\s+/g, '-').toLowerCase()
-    const filename = `resume-${namePart}-optimized.pdf`
+    const namePart = session.finalizedLinkedIn.headline
+      .split('|')[0].trim()
+      .replace(/\s+/g, '-')
+      .toLowerCase()
+      .slice(0, 40)
+    const filename = `resume-${namePart}.pdf`
 
     return new Response(buffer as unknown as BodyInit, {
       headers: {
