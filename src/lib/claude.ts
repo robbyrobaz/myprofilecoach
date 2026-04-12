@@ -39,7 +39,7 @@ function extractText(content: Anthropic.Messages.ContentBlock[]): string {
 export async function parseProfile(rawProfile: string): Promise<ParsedProfile> {
   const msg = await getClient().messages.create({
     model: MODEL,
-    max_tokens: 30000,
+    max_tokens: 4096,
     system: SYSTEM_PROMPT,
     messages: [{
       role: 'user',
@@ -70,7 +70,7 @@ export async function scoreProfile(
 ): Promise<{ jobResearch: string; keywords: string[]; score: ProfileScore }> {
   const msg = await getClient().messages.create({
     model: MODEL,
-    max_tokens: 30000,
+    max_tokens: 4096,
     system: SYSTEM_PROMPT,
     messages: [{
       role: 'user',
@@ -114,7 +114,7 @@ export async function generateInterviewQuestions(
 ): Promise<InterviewQuestion[]> {
   const msg = await getClient().messages.create({
     model: MODEL,
-    max_tokens: 30000,
+    max_tokens: 4096,
     system: SYSTEM_PROMPT,
     messages: [{
       role: 'user',
@@ -150,7 +150,7 @@ export async function processAnswers(
 
   const msg = await getClient().messages.create({
     model: MODEL,
-    max_tokens: 20000,
+    max_tokens: 2000,
     system: SYSTEM_PROMPT,
     messages: [{
       role: 'user',
@@ -177,7 +177,7 @@ export async function generateSuggestionCards(
 ): Promise<SuggestionCard[]> {
   const msg = await getClient().messages.create({
     model: MODEL,
-    max_tokens: 30000,
+    max_tokens: 4096,
     system: SYSTEM_PROMPT,
     messages: [{
       role: 'user',
@@ -221,7 +221,7 @@ export async function finalizeOutput(
 
   const msg = await getClient().messages.create({
     model: MODEL,
-    max_tokens: 30000,
+    max_tokens: 4096,
     system: SYSTEM_PROMPT,
     messages: [{
       role: 'user',
