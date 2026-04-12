@@ -3,12 +3,13 @@ import type { ParsedProfile, ProfileScore, InterviewQuestion, SuggestionCard, Fi
 
 function getClient() {
   const baseURL = process.env.ANTHROPIC_BASE_URL
-  // When using an alternate backend (e.g. MiniMax), ANTHROPIC_AUTH_TOKEN holds that key
-  // so we don't overwrite the real Anthropic key stored in ANTHROPIC_API_KEY
+  // When using an alternate backend (e.g. MiniMax), MINIMAX_API_KEY holds that key.
+  // We pass authToken: null explicitly so the SDK doesn't read ANTHROPIC_AUTH_TOKEN
+  // and send "Authorization: Bearer" — MiniMax only accepts "x-api-key".
   const apiKey = baseURL
-    ? (process.env.ANTHROPIC_AUTH_TOKEN ?? process.env.ANTHROPIC_API_KEY)
+    ? (process.env.MINIMAX_API_KEY ?? process.env.ANTHROPIC_API_KEY)
     : process.env.ANTHROPIC_API_KEY
-  return new Anthropic({ apiKey, ...(baseURL ? { baseURL } : {}) })
+  return new Anthropic({ apiKey, authToken: null, ...(baseURL ? { baseURL } : {}) })
 }
 const MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6'
 
