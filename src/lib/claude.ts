@@ -242,6 +242,12 @@ Extracted new achievements from interview: ${extractedAchievements}
 
 Generate one suggestion card per section that needs improvement. For each card show the CURRENT text, the SUGGESTED improvement (incorporating keywords + achievements), and a specific reason WHY the change matters for ${targetRole} recruiting.
 
+CRITICAL RULES:
+- NEVER invent metrics, numbers, or statistics the user did not provide. Do NOT fabricate placement counts, percentages, dollar amounts, or team sizes. If no metric was provided, write strong impact language without numbers (e.g., "Accelerated time-to-fill across multiple divisions" NOT "Reduced time-to-fill by 35%").
+- NEVER use placeholder brackets like [X%], [N+], or [insert number]. Every bullet must be complete and ready to paste into LinkedIn as-is.
+- Each role MUST have UNIQUE bullets. If someone held multiple similar roles (especially at the same company), differentiate by: scope changes, team growth, new responsibilities, different divisions/projects, or career progression. Do NOT repeat or paraphrase the same bullet across roles.
+- Only use numbers that came directly from the user's profile text or their interview answers.
+
 Return JSON array:
 [{
   "section": "headline" | "about" | "role_0" | "role_1" etc,
@@ -284,7 +290,11 @@ Approved changes to apply:
 ${approvedChanges || '(user kept all original text)'}
 
 Return the complete finalized profile as JSON with a new score estimate.
-IMPORTANT: Include ALL roles from the original profile in the output — not just the ones with approved changes. Apply approved changes to the relevant roles, keep original bullets for roles that had no changes.
+
+IMPORTANT RULES:
+- Include ALL roles from the original profile — not just the ones with approved changes. Apply approved changes to the relevant roles, keep original bullets for roles without changes.
+- NEVER invent metrics, numbers, or statistics not present in the original profile or approved changes. No fabricated placement counts, percentages, or dollar amounts. No placeholder brackets like [X%] or [N+]. Every bullet must be complete and paste-ready.
+- Each role MUST have unique, differentiated bullets. Do NOT repeat or paraphrase the same bullet across multiple roles — even if they are similar titles at the same company.
 {
   "headline": "string",
   "about": "string",
