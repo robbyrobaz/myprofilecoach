@@ -43,12 +43,25 @@ const SYSTEM_PROMPT = `You are an expert career coach and LinkedIn optimization 
 Always respond in valid JSON unless explicitly told otherwise. Be specific, not generic.`
 
 function jsonResponse<T>(text: string): T {
-  const match = text.match(/```json\n?([\s\S]*?)\n?```/) || text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/)
-  const raw = match ? match[1] : text
+  // Try multiple extraction strategies in order of reliability
+  // 1. Greedy backtick match (handles ``` inside JSON values)
+  const greedyFence = text.match(/```json\n?([\s\S]*)```\s*$/)
+  // 2. Non-greedy backtick match (original approach)
+  const lazyFence = text.match(/```json\n?([\s\S]*?)\n?```/)
+  // 3. Raw JSON object or array
+  const rawJson = text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/)
+
+  for (const match of [greedyFence, lazyFence, rawJson]) {
+    if (!match) continue
+    try {
+      return JSON.parse(match[1].trim()) as T
+    } catch { /* try next strategy */ }
+  }
+  // Last resort: try parsing the whole text
   try {
-    return JSON.parse(raw.trim()) as T
+    return JSON.parse(text.trim()) as T
   } catch {
-    throw new Error(`Claude returned invalid JSON: ${raw.slice(0, 200)}`)
+    throw new Error(`Claude returned invalid JSON: ${text.slice(0, 200)}`)
   }
 }
 
