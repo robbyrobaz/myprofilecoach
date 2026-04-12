@@ -24,11 +24,13 @@ export async function GET() {
     const client = new Anthropic({ apiKey, authToken: null, ...(baseURL ? { baseURL } : {}) })
     const msg = await client.messages.create({
       model,
-      max_tokens: 50,
-      messages: [{ role: 'user', content: 'Say "ok" and nothing else.' }],
+      max_tokens: 1000,
+      system: 'You are a helpful assistant. Always respond in valid JSON.',
+      messages: [{ role: 'user', content: 'Return this JSON exactly: {"status": "ok", "model": "working"}' }],
     })
     const text = msg.content.find(b => b.type === 'text')
-    return Response.json({ ok: true, config, response: text ? (text as {type:'text',text:string}).text : '(no text block)', blocks: msg.content.map(b => b.type) })
+    const rawText = text ? (text as {type:'text',text:string}).text : null
+    return Response.json({ ok: true, config, rawText, blocks: msg.content.map(b => b.type), usage: msg.usage })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     const status = (err as {status?: number}).status
