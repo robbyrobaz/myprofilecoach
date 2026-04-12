@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { parseProfile, scoreProfile, emptyMetrics, mergeMetrics } from '@/lib/claude'
-import { createSession, saveSession, checkFreeScoreLimit, getUser } from '@/lib/kv'
+import { createSession, saveSession, checkFreeScoreLimit, getUser, indexScoredSession } from '@/lib/kv'
 import { logger } from '@/lib/logger'
 
 export const maxDuration = 60 // seconds
@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
     session.stage = 'scored'
     await saveSession(session)
 
+    await indexScoredSession(session, metrics)
     logger.info('/api/score', 'session complete', { sessionId, overallScore: score.overall, totalTokens: metrics.totalInputTokens + metrics.totalOutputTokens, totalCostUsd: metrics.totalCostUsd.toFixed(5), totalDurationMs: metrics.totalDurationMs })
 
     return Response.json({

@@ -1,5 +1,17 @@
 import { Redis } from '@upstash/redis'
-import type { SessionState, UserRecord } from './types'
+import type { SessionState, UserRecord, RunMetrics, FeedbackRecord } from './types'
+
+export interface ScoreIndexEntry {
+  id: string
+  createdAt: number
+  targetRole: string
+  score: number
+  breakdown: { headline: number; about: number; experience: number; keywords: number; aiSignals: number }
+  email?: string
+  costUsd: number
+  totalTokens: number
+  stage: string
+}
 
 // Upstash injects UPSTASH_REDIS_REST_* via Vercel marketplace;
 // manual setup uses KV_REST_API_*. Support both.
@@ -68,6 +80,37 @@ export async function checkFreeScoreLimit(browserId: string): Promise<{ allowed:
   }
   await kv.set(key, used + 1, { ex: FREE_SCORE_TTL })
   return { allowed: true, used: used + 1, limit: FREE_SCORE_LIMIT }
+}
+
+// Score index — compact entries for admin review
+export async function indexScoredSession(session: SessionState, metrics: RunMetrics): Promise<void> {
+  if (!session.score) return
+  const entry: ScoreIndexEntry = {
+    id: session.id,
+    createdAt: session.createdAt,
+    targetRole: session.score.targetRole,
+    score: session.score.overall,
+    breakdown: session.score.breakdown,
+    email: session.userId,
+    costUsd: metrics.totalCostUsd,
+    totalTokens: metrics.totalInputTokens + metrics.totalOutputTokens,
+    stage: session.stage,
+  }
+  await kv.lpush(`${P}score:index`, JSON.stringify(entry))
+  await kv.ltrim(`${P}score:index`, 0, 999) // keep latest 1000
+}
+
+export async function getScoreIndex(limit = 100, offset = 0): Promise<ScoreIndexEntry[]> {
+  const raw = await kv.lrange<string>(`${P}score:index`, offset, offset + limit - 1)
+  return raw.map(r => (typeof r === 'string' ? JSON.parse(r) : r) as ScoreIndexEntry)
+}
+
+export async function getFeedbackList(limit = 50): Promise<FeedbackRecord[]> {
+  const ids = await kv.lrange<string>(`${P}feedback:list`, 0, limit - 1)
+  const records = await Promise.all(
+    ids.map(id => kv.get<FeedbackRecord>(`${P}feedback:${id}`))
+  )
+  return records.filter(Boolean) as FeedbackRecord[]
 }
 
 export function getCurrentPeriod(): string {
