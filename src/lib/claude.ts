@@ -2,9 +2,12 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { ParsedProfile, ProfileScore, InterviewQuestion, SuggestionCard, FinalizedOutput } from './types'
 
 function getClient() {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  return new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    ...(process.env.ANTHROPIC_BASE_URL ? { baseURL: process.env.ANTHROPIC_BASE_URL } : {}),
+  })
 }
-const MODEL = 'claude-sonnet-4-6'
+const MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6'
 
 // Shared system prompt (cached by Anthropic on repeated calls)
 const SYSTEM_PROMPT = `You are an expert career coach and LinkedIn optimization specialist. You deeply understand:
