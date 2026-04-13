@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'targetRoles must be a non-empty array' }, { status: 400 })
     }
 
-    // Rate limit free users — skip if BYPASS_AUTH or active subscriber
-    const bypassAuth = process.env.BYPASS_AUTH === 'true'
+    // Rate limit free users — skip if NEXT_PUBLIC_BYPASS_AUTH or active subscriber
+    const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true'
     if (!bypassAuth) {
       let isSubscriber = false
       if (email) {

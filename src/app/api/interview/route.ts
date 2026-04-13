@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     logger.info('/api/interview', 'interview generation started', { sessionId, userEmail: userEmail.slice(0, 3) + '***' })
 
     // Check active subscription (skip in bypass mode)
-    const bypassAuth = process.env.BYPASS_AUTH === 'true'
+    const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true'
     if (!bypassAuth) {
       const user = await getUser(userEmail)
       if (!user || user.subscriptionStatus !== 'active') {
