@@ -29,6 +29,28 @@ const NODE_LABELS = [
   'Skills',
   'Achievements',
   'Career Trajectory',
+  'Headline',
+  'About Section',
+  'Keyword Density',
+  'Recruiter Search',
+  'Role Bullets',
+  'Quantified Results',
+  'Industry Alignment',
+  'ATS Optimization',
+  'Profile Visibility',
+  'Endorsements',
+  'Job Titles',
+  'Revenue Impact',
+  'Team Leadership',
+  'Certifications',
+  'Publications',
+  'Cross-Functional',
+  'Growth Metrics',
+  'Strategic Vision',
+  'Stakeholders',
+  'Technical Stack',
+  'Promotions',
+  'Recommendations',
 ]
 
 // --- Floating label that tracks a node position ---
@@ -54,7 +76,7 @@ function NodeLabel({ nodeData, index, label }: { nodeData: THREE.Vector3[]; inde
       >
         <div
           style={{
-            fontSize: '10px',
+            fontSize: '9px',
             fontFamily: 'ui-monospace, monospace',
             fontWeight: 500,
             color: 'rgba(103, 232, 249, 0.7)',
@@ -78,7 +100,7 @@ function NodeNetwork() {
   const nodesRef = useRef<THREE.InstancedMesh>(null)
   const particlesRef = useRef<THREE.Points>(null)
 
-  const COUNT = 70
+  const COUNT = 80
   const PARTICLE_COUNT = 250
 
   // Generate node positions — labeled nodes get slightly more central placement

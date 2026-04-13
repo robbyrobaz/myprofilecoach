@@ -126,10 +126,10 @@ export default function OutputPage({ output, sessionId }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
+    <div className="min-h-screen text-slate-100 relative z-10">
 
       {/* Hero */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-slate-800/80 to-slate-900 border-b border-slate-800 px-4 py-14 text-center">
+      <div className="relative overflow-hidden bg-gradient-to-b from-slate-800/60 to-transparent border-b border-slate-800 px-4 py-14 text-center">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/20 via-transparent to-indigo-900/20 pointer-events-none" />
         <div className="relative">
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-sm font-medium text-emerald-300 mb-8">

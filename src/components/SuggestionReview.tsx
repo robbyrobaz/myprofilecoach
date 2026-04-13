@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { LoadingHUD } from '@/components/AnalysisHUD'
 
 interface Props {
   cards: SuggestionCard[]
@@ -93,22 +94,7 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
   }
 
   if (finalizing) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
-        <div className="text-center">
-          <svg
-            className="animate-spin h-10 w-10 text-indigo-400 mx-auto mb-4"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          <p className="text-slate-300 font-medium text-lg mb-1">Finalizing your profile...</p>
-          <p className="text-slate-500 text-sm">AI is compiling the approved changes.</p>
-        </div>
-      </div>
-    )
+    return <LoadingHUD message="Finalizing Profile" expectedDuration={60000} />
   }
 
   const statusBadge = (status: SuggestionCard['status']) => {
@@ -119,7 +105,7 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 px-4 py-12">
+    <div className="min-h-screen text-slate-100 px-4 py-12 relative z-10">
       <div className="mx-auto max-w-2xl space-y-8">
 
         {/* Progress header */}

@@ -6,6 +6,7 @@ import type { ProfileScore, ParsedRole } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { LoadingHUD } from '@/components/AnalysisHUD'
 
 interface Props {
   score: ProfileScore
@@ -130,6 +131,11 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
       setError(err instanceof Error ? err.message : 'Failed to start interview')
       setInterviewLoading(false)
     }
+  }
+
+  // Full-screen loading HUD when starting interview
+  if (interviewLoading) {
+    return <LoadingHUD message="Preparing Interview" expectedDuration={15000} />
   }
 
   const overallColor =
@@ -275,51 +281,23 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
 
         {/* CTA */}
         {isSubscribed ? (
-          <div className="space-y-3">
-            {interviewLoading ? (
-              <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-6 space-y-4">
-                <div className="flex items-center justify-center gap-3">
-                  <svg className="animate-spin h-5 w-5 text-indigo-400 flex-shrink-0" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  <span className="text-indigo-300 font-medium">AI is reviewing your profile...</span>
-                </div>
-                <p className="text-center text-slate-500 text-xs">Preparing personalized interview questions. This takes about 8 seconds.</p>
-                <div className="flex justify-center gap-1.5">
-                  {[0,1,2,3,4].map(i => (
-                    <div
-                      key={i}
-                      className="h-1 w-8 rounded-full bg-indigo-500/30 overflow-hidden"
-                    >
-                      <div
-                        className="h-full rounded-full bg-indigo-500 animate-pulse"
-                        style={{ animationDelay: `${i * 0.15}s` }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center space-y-3">
-                <p className="text-slate-400 text-sm">You have an active subscription.</p>
-                {!email && (
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
-                  />
-                )}
-                <Button
-                  onClick={handleStartInterview}
-                  className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base"
-                >
-                  Start AI Interview →
-                </Button>
-              </div>
+          <div className="space-y-3 text-center">
+            <p className="text-slate-400 text-sm">You have an active subscription.</p>
+            {!email && (
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                className="w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-sm"
+              />
             )}
+            <Button
+              onClick={handleStartInterview}
+              className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base"
+            >
+              Start AI Interview →
+            </Button>
           </div>
         ) : (
           <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-indigo-900/30 to-slate-900/80 backdrop-blur-sm p-8 text-center space-y-4">

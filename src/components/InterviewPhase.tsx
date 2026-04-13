@@ -6,6 +6,7 @@ import type { InterviewQuestion } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
+import { LoadingHUD } from '@/components/AnalysisHUD'
 
 interface Props {
   questions: InterviewQuestion[]
@@ -71,26 +72,11 @@ export default function InterviewPhase({ questions, sessionId }: Props) {
   }
 
   if (submitting) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
-        <div className="text-center">
-          <svg
-            className="animate-spin h-10 w-10 text-indigo-400 mx-auto mb-4"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          <p className="text-slate-300 font-medium text-lg mb-1">AI is analyzing your experience...</p>
-          <p className="text-slate-500 text-sm">Building your optimized profile. This takes ~15 seconds.</p>
-        </div>
-      </div>
-    )
+    return <LoadingHUD message="Analyzing Your Experience" expectedDuration={20000} />
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 px-4 py-12">
+    <div className="min-h-screen text-slate-100 px-4 py-12 relative z-10">
       <div className="mx-auto max-w-2xl space-y-8">
 
         {/* Progress */}
