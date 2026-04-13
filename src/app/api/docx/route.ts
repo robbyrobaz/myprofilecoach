@@ -165,13 +165,6 @@ function buildDoc(output: FinalizedOutput, parsed: ParsedProfile | null): Docume
     }
   }
 
-  // Footer note
-  children.push(new Paragraph({
-    children: [new TextRun({ text: 'Optimized with My Profile Coach · myprofilecoach.com', size: 16, color: 'c4b5fd', italics: true })],
-    alignment: AlignmentType.CENTER,
-    spacing: { before: 480 },
-  }))
-
   return new Document({
     styles: {
       default: {
