@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, Suspense } from 'react'
+import React, { useEffect, useState, useRef, useCallback, Suspense } from 'react'
 import { useSearchParams, useParams } from 'next/navigation'
 import type { SessionState } from '@/lib/types'
 import ScoreReveal from '@/components/ScoreReveal'
@@ -40,16 +40,28 @@ export default function SessionPage() {
   const { id } = useParams<{ id: string }>()
   const [session, setSession] = useState<SessionState | null | 'loading'>('loading')
   const { activate, deactivate, state: jarvisState } = useJarvis()
+  const pausePollRef = useRef(false)
+
+  // Pause polling and optimistically set stage (used by child components during transitions)
+  const startTransition = useCallback((stage: string, jarvisTitle: string, duration: number) => {
+    pausePollRef.current = true
+    activate(jarvisTitle, { expectedDuration: duration })
+    setSession(prev => {
+      if (!prev || prev === 'loading') return prev
+      return { ...prev, stage } as SessionState
+    })
+  }, [activate])
 
   useEffect(() => {
     let cancelled = false
 
     async function load() {
+      if (pausePollRef.current) return undefined
       try {
         const res = await fetch(`/api/session/${id}`, { cache: 'no-store' })
         if (!res.ok) { if (!cancelled) setSession(null); return }
         const data = await res.json()
-        if (!cancelled) setSession(data)
+        if (!cancelled && !pausePollRef.current) setSession(data)
         return data
       } catch {
         if (!cancelled) setSession(null)
@@ -60,7 +72,12 @@ export default function SessionPage() {
 
     async function poll() {
       const data = await load()
-      if (!data || cancelled) return
+      if (cancelled) return
+      if (!data && pausePollRef.current) {
+        setTimeout(poll, 3000)
+        return
+      }
+      if (!data) return
       if (POLLING_STAGES.has(data.stage)) {
         setTimeout(poll, 3000)
       }
@@ -132,7 +149,7 @@ export default function SessionPage() {
   let content: React.ReactNode
 
   if (stage === 'scored' && session.score) {
-    content = <ScoreReveal score={session.score} sessionId={session.id} keywords={session.keywords ?? []} parsedRoles={session.parsedProfile?.roles ?? []} onSessionUpdate={setSession} />
+    content = <ScoreReveal score={session.score} sessionId={session.id} keywords={session.keywords ?? []} parsedRoles={session.parsedProfile?.roles ?? []} onStartTransition={startTransition} onSessionUpdate={(s) => { pausePollRef.current = false; setSession(s) }} />
   } else if ((stage === 'interviewing' || stage === 'answering') && session.interviewQuestions) {
     content = <InterviewPhase questions={session.interviewQuestions} sessionId={session.id} />
   } else if ((stage === 'suggestions' || stage === 'reviewing') && session.suggestionCards) {

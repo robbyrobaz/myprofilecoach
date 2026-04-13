@@ -5,13 +5,13 @@ import type { ProfileScore, ParsedRole, SessionState } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { useJarvis } from '@/components/JarvisContext'
 
 interface Props {
   score: ProfileScore
   sessionId: string
   keywords: string[]
   parsedRoles?: ParsedRole[]
+  onStartTransition?: (stage: string, jarvisTitle: string, duration: number) => void
   onSessionUpdate?: (session: SessionState) => void
 }
 
@@ -62,7 +62,7 @@ function ScoreBar({ label, value, max }: { label: string; value: number; max: nu
 }
 
 
-export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = [], onSessionUpdate }: Props) {
+export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = [], onStartTransition, onSessionUpdate }: Props) {
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [email, setEmail] = useState('')
   const [showEmailInput, setShowEmailInput] = useState(false)
@@ -114,6 +114,8 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
     }
     setInterviewLoading(true)
     setError('')
+    // Pause polling and activate Jarvis BEFORE the API call
+    onStartTransition?.('interviewing', 'Preparing Interview', 15000)
     try {
       const res = await fetch('/api/interview', {
         method: 'POST',
@@ -137,15 +139,6 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
       setInterviewLoading(false)
     }
   }
-
-  const { activate } = useJarvis()
-
-  // Activate Jarvis when interview starts loading
-  useEffect(() => {
-    if (interviewLoading) {
-      activate('Preparing Interview', { expectedDuration: 15000 })
-    }
-  }, [interviewLoading, activate])
 
   const overallColor =
     score.overall >= 70
