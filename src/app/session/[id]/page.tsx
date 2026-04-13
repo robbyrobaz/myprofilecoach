@@ -8,6 +8,7 @@ import InterviewPhase from '@/components/InterviewPhase'
 import SuggestionReview from '@/components/SuggestionReview'
 import OutputPage from '@/components/OutputPage'
 import Nav from '@/components/Nav'
+import { LoadingHUD } from '@/components/AnalysisHUD'
 
 // Isolated component so useSearchParams doesn't block the whole page
 function PaidDetector() {
@@ -59,8 +60,7 @@ export default function SessionPage() {
     return (
       <>
         <Suspense fallback={null}><PaidDetector /></Suspense>
-        <Nav />
-        <div className="pt-16"><Spinner message="Loading your session..." /></div>
+        <LoadingHUD message="Loading Session" expectedDuration={10000} />
       </>
     )
   }
@@ -78,27 +78,38 @@ export default function SessionPage() {
 
   const { stage } = session
 
+  // Loading states — full-screen HUD takeover (no Nav)
+  if (stage === 'scored' && !session.score) {
+    return <><Suspense fallback={null}><PaidDetector /></Suspense><LoadingHUD message="Scoring Profile" expectedDuration={30000} /></>
+  }
+  if ((stage === 'interviewing' || stage === 'answering') && !session.interviewQuestions) {
+    return <><Suspense fallback={null}><PaidDetector /></Suspense><LoadingHUD message="Generating Questions" expectedDuration={15000} /></>
+  }
+  if ((stage === 'suggestions' || stage === 'reviewing') && !session.suggestionCards) {
+    return <><Suspense fallback={null}><PaidDetector /></Suspense><LoadingHUD message="Building Suggestions" expectedDuration={30000} /></>
+  }
+  if ((stage === 'complete' || stage === 'pdf_ready') && !session.finalizedLinkedIn) {
+    return <><Suspense fallback={null}><PaidDetector /></Suspense><LoadingHUD message="Finalizing Profile" expectedDuration={60000} /></>
+  }
+  if (stage === 'processing') {
+    return <><Suspense fallback={null}><PaidDetector /></Suspense><LoadingHUD message="Building Suggestions" expectedDuration={30000} /></>
+  }
+  if (stage === 'scoring' || stage === 'finalizing') {
+    return <><Suspense fallback={null}><PaidDetector /></Suspense><LoadingHUD message="Analyzing Profile" expectedDuration={120000} /></>
+  }
+
+  // Content states — show with Nav
   let content: React.ReactNode
-  if (stage === 'scored') {
-    content = session.score
-      ? <ScoreReveal score={session.score} sessionId={session.id} keywords={session.keywords ?? []} parsedRoles={session.parsedProfile?.roles ?? []} />
-      : <Spinner message="Scoring your profile..." />
-  } else if (stage === 'interviewing' || stage === 'answering') {
-    content = session.interviewQuestions
-      ? <InterviewPhase questions={session.interviewQuestions} sessionId={session.id} />
-      : <Spinner message="Generating questions..." />
-  } else if (stage === 'suggestions' || stage === 'reviewing') {
-    content = session.suggestionCards
-      ? <SuggestionReview cards={session.suggestionCards} sessionId={session.id} />
-      : <Spinner message="Building suggestions..." />
-  } else if (stage === 'complete' || stage === 'pdf_ready') {
-    content = session.finalizedLinkedIn
-      ? <OutputPage output={session.finalizedLinkedIn} sessionId={session.id} />
-      : <Spinner message="Finalizing profile..." />
-  } else if (stage === 'processing') {
-    content = <Spinner message="Building your suggestions..." />
+  if (stage === 'scored' && session.score) {
+    content = <ScoreReveal score={session.score} sessionId={session.id} keywords={session.keywords ?? []} parsedRoles={session.parsedProfile?.roles ?? []} />
+  } else if ((stage === 'interviewing' || stage === 'answering') && session.interviewQuestions) {
+    content = <InterviewPhase questions={session.interviewQuestions} sessionId={session.id} />
+  } else if ((stage === 'suggestions' || stage === 'reviewing') && session.suggestionCards) {
+    content = <SuggestionReview cards={session.suggestionCards} sessionId={session.id} />
+  } else if ((stage === 'complete' || stage === 'pdf_ready') && session.finalizedLinkedIn) {
+    content = <OutputPage output={session.finalizedLinkedIn} sessionId={session.id} />
   } else {
-    content = <Spinner message="Analyzing your profile..." />
+    return <><Suspense fallback={null}><PaidDetector /></Suspense><LoadingHUD message="Analyzing Profile" expectedDuration={120000} /></>
   }
 
   return (
@@ -110,17 +121,3 @@ export default function SessionPage() {
   )
 }
 
-function Spinner({ message }: { message: string }) {
-  return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-xs text-cyan-300 mb-6 backdrop-blur-sm">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-          PROCESSING
-        </div>
-        <p className="text-white font-semibold text-xl mb-2 drop-shadow-[0_0_20px_rgba(99,102,241,0.3)]">{message}</p>
-        <p className="text-slate-500 text-sm">Hang tight — this takes 10–20 seconds.</p>
-      </div>
-    </div>
-  )
-}

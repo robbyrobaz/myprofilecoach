@@ -199,14 +199,27 @@ function NodeNetwork() {
         posAttr.setXYZ(e * 2, a.x, a.y, a.z)
         posAttr.setXYZ(e * 2 + 1, b.x, b.y, b.z)
 
-        // Energy pulse along edges — cyan to electric blue
-        const pulse = Math.sin(t * 3 + e * 0.2) * 0.5 + 0.5
+        // Energy pulse — fast traveling wave along edges
+        const wave1 = Math.sin(t * 6 + e * 0.5) * 0.5 + 0.5
+        const wave2 = Math.sin(t * 4.5 + e * 0.3 + 1.5) * 0.5 + 0.5
+        const pulse = Math.max(wave1, wave2)
         const dist = a.distanceTo(b)
-        const brightness = Math.max(0, 1 - dist / 3.2) * (0.12 + pulse * 0.2)
-        // Connections to labeled nodes glow slightly brighter
-        const boost = (i < NODE_LABELS.length || j < NODE_LABELS.length) ? 1.4 : 1.0
-        colorAttr.setXYZ(e * 2, 0.15 * brightness * boost, 0.65 * brightness * boost, brightness * boost)
-        colorAttr.setXYZ(e * 2 + 1, 0.2 * brightness * boost, 0.55 * brightness * boost, brightness * 0.85 * boost)
+        const base = Math.max(0, 1 - dist / 3.2)
+        const brightness = base * (0.15 + pulse * 0.35)
+        // Connections to labeled nodes glow brighter
+        const boost = (i < NODE_LABELS.length || j < NODE_LABELS.length) ? 1.6 : 1.0
+        // Vary color per-vertex for traveling light effect
+        const shift = Math.sin(t * 8 + e * 0.7) * 0.5 + 0.5
+        colorAttr.setXYZ(e * 2,
+          (0.1 + shift * 0.15) * brightness * boost,
+          (0.5 + shift * 0.2) * brightness * boost,
+          brightness * boost,
+        )
+        colorAttr.setXYZ(e * 2 + 1,
+          (0.15 + (1 - shift) * 0.1) * brightness * boost,
+          (0.6 + (1 - shift) * 0.15) * brightness * boost,
+          brightness * 0.9 * boost,
+        )
       }
       posAttr.needsUpdate = true
       colorAttr.needsUpdate = true
@@ -242,7 +255,7 @@ function NodeNetwork() {
           <bufferAttribute attach="attributes-position" args={[linePositions, 3]} count={edgePairs.length * 2} />
           <bufferAttribute attach="attributes-color" args={[lineColors, 3]} count={edgePairs.length * 2} />
         </bufferGeometry>
-        <lineBasicMaterial vertexColors transparent opacity={0.6} blending={THREE.AdditiveBlending} />
+        <lineBasicMaterial vertexColors transparent opacity={0.8} blending={THREE.AdditiveBlending} />
       </lineSegments>
 
       {/* Nodes — small glowing spheres */}
@@ -285,22 +298,21 @@ export function AmbientBackground() {
   )
 }
 
-// --- Main HUD Component (active full-screen mode) ---
-export default function AnalysisHUD({ targetRole }: { targetRole: string }) {
+// --- Shared full-screen HUD content ---
+function HUDOverlay({ title, subtitle, expectedDuration }: { title: string; subtitle?: string; expectedDuration: number }) {
   const [phase, setPhase] = useState(0)
   const [progress, setProgress] = useState(0)
   const [stats, setStats] = useState({ nodes: 0, edges: 0, patterns: 0 })
 
   useEffect(() => {
     let elapsed = 0
-    const totalExpected = 120000
     const interval = setInterval(() => {
       elapsed += 80
-      const raw = elapsed / totalExpected
+      const raw = elapsed / expectedDuration
       const eased = 1 - Math.pow(1 - Math.min(raw, 1), 2.5)
       setProgress(eased * 99)
 
-      const phaseDur = totalExpected / PHASES.length
+      const phaseDur = expectedDuration / PHASES.length
       setPhase(Math.min(Math.floor(elapsed / phaseDur), PHASES.length - 1))
 
       setStats({
@@ -310,7 +322,7 @@ export default function AnalysisHUD({ targetRole }: { targetRole: string }) {
       })
     }, 80)
     return () => clearInterval(interval)
-  }, [])
+  }, [expectedDuration])
 
   return (
     <div className="min-h-screen bg-[#020617] flex flex-col relative overflow-hidden">
@@ -333,26 +345,24 @@ export default function AnalysisHUD({ targetRole }: { targetRole: string }) {
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-4 pointer-events-none">
-        {/* Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-xs text-cyan-300 mb-6 backdrop-blur-sm">
           <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
           PROFILE INTELLIGENCE ENGINE
         </div>
 
-        {/* Title */}
-        <h1 className="text-3xl sm:text-5xl font-bold text-white text-center mb-2 drop-shadow-[0_0_30px_rgba(99,102,241,0.3)]">
-          Analyzing Profile
+        <h1 className="text-3xl sm:text-5xl font-bold text-white text-center mb-2 drop-shadow-[0_0_30px_rgba(6,182,212,0.3)]">
+          {title}
         </h1>
-        <p className="text-base sm:text-lg text-indigo-300/80 text-center mb-2">
-          {targetRole}
-        </p>
+        {subtitle && (
+          <p className="text-base sm:text-lg text-cyan-300/70 text-center mb-2">
+            {subtitle}
+          </p>
+        )}
 
-        {/* Phase */}
         <p className="text-sm text-cyan-400/60 mt-3 mb-10 h-5 font-mono tracking-wider">
           {PHASES[phase]}
         </p>
 
-        {/* Stats */}
         <div className="flex gap-8 sm:gap-14 mb-10">
           {[
             { label: 'Nodes Scanned', value: stats.nodes.toLocaleString() },
@@ -368,15 +378,14 @@ export default function AnalysisHUD({ targetRole }: { targetRole: string }) {
           ))}
         </div>
 
-        {/* Progress bar */}
         <div className="w-full max-w-sm">
           <div className="h-[3px] rounded-full bg-slate-800/80 overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-500 ease-out"
               style={{
                 width: `${progress}%`,
-                background: 'linear-gradient(90deg, #06b6d4, #6366f1, #a78bfa)',
-                boxShadow: '0 0 12px rgba(99, 102, 241, 0.6)',
+                background: 'linear-gradient(90deg, #06b6d4, #0ea5e9, #22d3ee)',
+                boxShadow: '0 0 12px rgba(6, 182, 212, 0.6)',
               }}
             />
           </div>
@@ -384,9 +393,18 @@ export default function AnalysisHUD({ targetRole }: { targetRole: string }) {
         </div>
       </div>
 
-      {/* Edge lines */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
     </div>
   )
+}
+
+// --- Main HUD for initial profile analysis (120s expected) ---
+export default function AnalysisHUD({ targetRole }: { targetRole: string }) {
+  return <HUDOverlay title="Analyzing Profile" subtitle={targetRole} expectedDuration={120000} />
+}
+
+// --- Loading HUD for any stage transition (reusable, shorter durations) ---
+export function LoadingHUD({ message, expectedDuration = 30000 }: { message: string; expectedDuration?: number }) {
+  return <HUDOverlay title={message} expectedDuration={expectedDuration} />
 }
