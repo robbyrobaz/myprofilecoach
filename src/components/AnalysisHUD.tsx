@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo, Suspense } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
+import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 
 // --- Phase labels ---
@@ -18,23 +19,78 @@ const PHASES = [
   'Synthesizing Intelligence Report',
 ]
 
-// --- 3D Node Mesh (glowing spheres connected by stretching lines) ---
+// --- Node labels assigned to the first N nodes ---
+const NODE_LABELS = [
+  'Experience',
+  'Hidden Wins',
+  'Leadership Scope',
+  'Impact Metrics',
+  'AI Signals',
+  'Skills',
+  'Achievements',
+  'Career Trajectory',
+]
+
+// --- Floating label that tracks a node position ---
+function NodeLabel({ nodeData, index, label }: { nodeData: THREE.Vector3[]; index: number; label: string }) {
+  const ref = useRef<THREE.Group>(null)
+
+  useFrame(() => {
+    if (ref.current && nodeData[index]) {
+      ref.current.position.copy(nodeData[index])
+    }
+  })
+
+  return (
+    <group ref={ref}>
+      <Html
+        center
+        distanceFactor={8}
+        style={{
+          pointerEvents: 'none',
+          userSelect: 'none',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        <div
+          style={{
+            fontSize: '10px',
+            fontFamily: 'ui-monospace, monospace',
+            fontWeight: 500,
+            color: 'rgba(103, 232, 249, 0.7)',
+            textShadow: '0 0 8px rgba(34, 211, 238, 0.5), 0 0 20px rgba(99, 102, 241, 0.3)',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            transform: 'translateY(-14px)',
+          }}
+        >
+          {label}
+        </div>
+      </Html>
+    </group>
+  )
+}
+
+// --- 3D Node Network ---
 function NodeNetwork() {
   const groupRef = useRef<THREE.Group>(null)
   const linesRef = useRef<THREE.LineSegments>(null)
   const nodesRef = useRef<THREE.InstancedMesh>(null)
   const particlesRef = useRef<THREE.Points>(null)
 
-  const COUNT = 60
-  const PARTICLE_COUNT = 200
+  const COUNT = 70
+  const PARTICLE_COUNT = 250
 
-  // Generate node positions
+  // Generate node positions — labeled nodes get slightly more central placement
   const nodeData = useMemo(() => {
     const positions: THREE.Vector3[] = []
     for (let i = 0; i < COUNT; i++) {
       const phi = Math.acos(2 * Math.random() - 1)
       const theta = Math.random() * Math.PI * 2
-      const r = 2.5 + Math.random() * 1.5
+      // Labeled nodes stay in the mid-range for visibility
+      const r = i < NODE_LABELS.length
+        ? 2.0 + Math.random() * 1.2
+        : 1.5 + Math.random() * 2.5
       positions.push(new THREE.Vector3(
         r * Math.sin(phi) * Math.cos(theta),
         r * Math.sin(phi) * Math.sin(theta),
@@ -47,9 +103,9 @@ function NodeNetwork() {
   // Velocity for each node
   const velocities = useMemo(() =>
     nodeData.map(() => new THREE.Vector3(
-      (Math.random() - 0.5) * 0.003,
-      (Math.random() - 0.5) * 0.003,
-      (Math.random() - 0.5) * 0.003,
+      (Math.random() - 0.5) * 0.002,
+      (Math.random() - 0.5) * 0.002,
+      (Math.random() - 0.5) * 0.002,
     )), [nodeData])
 
   // Particle positions
@@ -66,12 +122,12 @@ function NodeNetwork() {
     return arr
   }, [])
 
-  // Build edge pairs (connect nearby nodes)
+  // Build edge pairs (connect nearby nodes — increased threshold for denser mesh)
   const edgePairs = useMemo(() => {
     const pairs: [number, number][] = []
     for (let i = 0; i < COUNT; i++) {
       for (let j = i + 1; j < COUNT; j++) {
-        if (nodeData[i].distanceTo(nodeData[j]) < 2.8) {
+        if (nodeData[i].distanceTo(nodeData[j]) < 3.2) {
           pairs.push([i, j])
         }
       }
@@ -86,8 +142,8 @@ function NodeNetwork() {
 
     // Rotate the whole group slowly
     if (groupRef.current) {
-      groupRef.current.rotation.y = t * 0.08
-      groupRef.current.rotation.x = Math.sin(t * 0.05) * 0.1
+      groupRef.current.rotation.y = t * 0.06
+      groupRef.current.rotation.x = Math.sin(t * 0.04) * 0.08
     }
 
     // Move nodes
@@ -95,38 +151,44 @@ function NodeNetwork() {
       const p = nodeData[i]
       const v = velocities[i]
       p.add(v)
-      // Soft boundary
       const dist = p.length()
       if (dist > 4.5) {
         v.multiplyScalar(-1)
         p.normalize().multiplyScalar(4.4)
       }
-      if (dist < 1) {
+      if (dist < 0.8) {
         v.multiplyScalar(-1)
-        p.normalize().multiplyScalar(1.1)
+        p.normalize().multiplyScalar(0.9)
       }
     }
 
-    // Update instanced mesh (nodes)
+    // Update instanced mesh (nodes — small glowing dots)
     if (nodesRef.current) {
       for (let i = 0; i < COUNT; i++) {
-        const pulse = 0.8 + Math.sin(t * 3 + i * 0.7) * 0.4
-        const scale = 0.04 + pulse * 0.02
+        const pulse = 0.8 + Math.sin(t * 2.5 + i * 0.7) * 0.4
+        // Labeled nodes slightly larger
+        const baseScale = i < NODE_LABELS.length ? 0.05 : 0.03
+        const scale = baseScale + pulse * 0.015
         dummy.position.copy(nodeData[i])
         dummy.scale.setScalar(scale)
         dummy.updateMatrix()
         nodesRef.current.setMatrixAt(i, dummy.matrix)
 
-        // Color — pulse between cyan and blue
         const color = new THREE.Color()
-        color.setHSL(0.55 + Math.sin(t * 2 + i) * 0.05, 0.9, 0.5 + pulse * 0.2)
+        if (i < NODE_LABELS.length) {
+          // Labeled nodes: brighter white-cyan
+          color.setHSL(0.52 + Math.sin(t * 1.5 + i) * 0.03, 0.6, 0.7 + pulse * 0.15)
+        } else {
+          // Regular nodes: cyan to electric blue
+          color.setHSL(0.55 + Math.sin(t * 2 + i) * 0.05, 0.9, 0.45 + pulse * 0.2)
+        }
         nodesRef.current.setColorAt(i, color)
       }
       nodesRef.current.instanceMatrix.needsUpdate = true
       if (nodesRef.current.instanceColor) nodesRef.current.instanceColor.needsUpdate = true
     }
 
-    // Update line positions (stretching between moving nodes)
+    // Update line positions (thin stretching connections)
     if (linesRef.current) {
       const posAttr = linesRef.current.geometry.getAttribute('position') as THREE.BufferAttribute
       const colorAttr = linesRef.current.geometry.getAttribute('color') as THREE.BufferAttribute
@@ -137,12 +199,14 @@ function NodeNetwork() {
         posAttr.setXYZ(e * 2, a.x, a.y, a.z)
         posAttr.setXYZ(e * 2 + 1, b.x, b.y, b.z)
 
-        // Animate color — energy pulse along edges
-        const pulse = Math.sin(t * 4 + e * 0.3) * 0.5 + 0.5
+        // Energy pulse along edges — cyan to electric blue
+        const pulse = Math.sin(t * 3 + e * 0.2) * 0.5 + 0.5
         const dist = a.distanceTo(b)
-        const brightness = Math.max(0, 1 - dist / 2.8) * (0.15 + pulse * 0.25)
-        colorAttr.setXYZ(e * 2, 0.2 * brightness, 0.7 * brightness, brightness)
-        colorAttr.setXYZ(e * 2 + 1, 0.3 * brightness, 0.6 * brightness, brightness * 0.8)
+        const brightness = Math.max(0, 1 - dist / 3.2) * (0.12 + pulse * 0.2)
+        // Connections to labeled nodes glow slightly brighter
+        const boost = (i < NODE_LABELS.length || j < NODE_LABELS.length) ? 1.4 : 1.0
+        colorAttr.setXYZ(e * 2, 0.15 * brightness * boost, 0.65 * brightness * boost, brightness * boost)
+        colorAttr.setXYZ(e * 2 + 1, 0.2 * brightness * boost, 0.55 * brightness * boost, brightness * 0.85 * boost)
       }
       posAttr.needsUpdate = true
       colorAttr.needsUpdate = true
@@ -155,12 +219,11 @@ function NodeNetwork() {
         const x = posAttr.getX(i)
         const y = posAttr.getY(i)
         const z = posAttr.getZ(i)
-        // Gentle orbit
-        const angle = 0.002
+        const angle = 0.0015
         const cos = Math.cos(angle), sin = Math.sin(angle)
         posAttr.setXYZ(i,
           x * cos - z * sin,
-          y + Math.sin(t * 0.5 + i) * 0.002,
+          y + Math.sin(t * 0.4 + i) * 0.0015,
           x * sin + z * cos,
         )
       }
@@ -173,18 +236,18 @@ function NodeNetwork() {
 
   return (
     <group ref={groupRef}>
-      {/* Edges — stretching lines */}
+      {/* Edges — thin stretching lines forming the nest */}
       <lineSegments ref={linesRef}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[linePositions, 3]} count={edgePairs.length * 2} />
           <bufferAttribute attach="attributes-color" args={[lineColors, 3]} count={edgePairs.length * 2} />
         </bufferGeometry>
-        <lineBasicMaterial vertexColors transparent opacity={0.8} blending={THREE.AdditiveBlending} />
+        <lineBasicMaterial vertexColors transparent opacity={0.6} blending={THREE.AdditiveBlending} />
       </lineSegments>
 
-      {/* Nodes — instanced spheres */}
+      {/* Nodes — small glowing spheres */}
       <instancedMesh ref={nodesRef} args={[undefined, undefined, COUNT]}>
-        <sphereGeometry args={[1, 12, 12]} />
+        <sphereGeometry args={[1, 10, 10]} />
         <meshBasicMaterial transparent opacity={0.9} blending={THREE.AdditiveBlending} />
       </instancedMesh>
 
@@ -193,47 +256,21 @@ function NodeNetwork() {
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[particlePositions, 3]} count={PARTICLE_COUNT} />
         </bufferGeometry>
-        <pointsMaterial size={0.03} color="#4fc3f7" transparent opacity={0.4} blending={THREE.AdditiveBlending} sizeAttenuation />
+        <pointsMaterial size={0.02} color="#4fc3f7" transparent opacity={0.35} blending={THREE.AdditiveBlending} sizeAttenuation />
       </points>
 
-      {/* Central glow core */}
-      <mesh>
-        <sphereGeometry args={[0.4, 32, 32]} />
-        <meshBasicMaterial color="#6366f1" transparent opacity={0.15} blending={THREE.AdditiveBlending} />
-      </mesh>
-      <mesh>
-        <sphereGeometry args={[0.2, 32, 32]} />
-        <meshBasicMaterial color="#818cf8" transparent opacity={0.4} blending={THREE.AdditiveBlending} />
-      </mesh>
-
-      {/* Scanning ring */}
-      <ScanRing />
+      {/* Node labels */}
+      {NODE_LABELS.map((label, i) => (
+        <NodeLabel key={label} nodeData={nodeData} index={i} label={label} />
+      ))}
     </group>
   )
 }
 
-function ScanRing() {
-  const ref = useRef<THREE.Mesh>(null)
-  useFrame(({ clock }) => {
-    if (!ref.current) return
-    const t = clock.getElapsedTime()
-    ref.current.rotation.x = t * 0.5
-    ref.current.rotation.z = t * 0.3
-    const scale = 1.8 + Math.sin(t * 2) * 0.3
-    ref.current.scale.setScalar(scale)
-  })
-  return (
-    <mesh ref={ref}>
-      <torusGeometry args={[1, 0.008, 16, 100]} />
-      <meshBasicMaterial color="#4fc3f7" transparent opacity={0.3} blending={THREE.AdditiveBlending} />
-    </mesh>
-  )
-}
-
-// --- Ambient background (muted 3D mesh behind homepage content) ---
+// --- Ambient background (muted 3D mesh behind all pages) ---
 export function AmbientBackground() {
   return (
-    <div className="absolute inset-0 opacity-30 pointer-events-none">
+    <div className="fixed inset-0 opacity-25 pointer-events-none" style={{ zIndex: 0 }}>
       <Suspense fallback={null}>
         <Canvas
           camera={{ position: [0, 0, 10], fov: 55 }}
@@ -256,20 +293,16 @@ export default function AnalysisHUD({ targetRole }: { targetRole: string }) {
 
   useEffect(() => {
     let elapsed = 0
-    // Total expected duration ~120s (matches the Vercel timeout)
     const totalExpected = 120000
     const interval = setInterval(() => {
       elapsed += 80
-      // Ease-out progress — slows down but never fully stalls
       const raw = elapsed / totalExpected
       const eased = 1 - Math.pow(1 - Math.min(raw, 1), 2.5)
       setProgress(eased * 99)
 
-      // Phase cycling
       const phaseDur = totalExpected / PHASES.length
       setPhase(Math.min(Math.floor(elapsed / phaseDur), PHASES.length - 1))
 
-      // Stats
       setStats({
         nodes: Math.min(Math.floor(elapsed / 50), 1847),
         edges: Math.min(Math.floor(elapsed / 28), 5291),
@@ -281,7 +314,7 @@ export default function AnalysisHUD({ targetRole }: { targetRole: string }) {
 
   return (
     <div className="min-h-screen bg-[#020617] flex flex-col relative overflow-hidden">
-      {/* 3D Canvas — full screen background */}
+      {/* 3D Canvas — full screen, full intensity */}
       <div className="absolute inset-0">
         <Suspense fallback={null}>
           <Canvas

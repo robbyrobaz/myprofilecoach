@@ -69,7 +69,7 @@ export default function SessionPage() {
     return (
       <>
         <Nav />
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center pt-16">
+        <div className="min-h-screen flex items-center justify-center pt-16">
           <p className="text-slate-400">Session not found. <a href="/" className="text-indigo-400 underline">Start over</a></p>
         </div>
       </>
@@ -112,13 +112,13 @@ export default function SessionPage() {
 
 function Spinner({ message }: { message: string }) {
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center">
-        <svg className="animate-spin h-10 w-10 text-indigo-400 mx-auto mb-4" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
-        <p className="text-slate-300 font-medium text-lg mb-1">{message}</p>
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-xs text-cyan-300 mb-6 backdrop-blur-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          PROCESSING
+        </div>
+        <p className="text-white font-semibold text-xl mb-2 drop-shadow-[0_0_20px_rgba(99,102,241,0.3)]">{message}</p>
         <p className="text-slate-500 text-sm">Hang tight — this takes 10–20 seconds.</p>
       </div>
     </div>

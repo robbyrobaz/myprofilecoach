@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import Nav from '@/components/Nav'
-import AnalysisHUD, { AmbientBackground } from '@/components/AnalysisHUD'
+import AnalysisHUD from '@/components/AnalysisHUD'
 
 // Bookmarklet — runs on linkedin.com, scrolls/expands profile, opens MPC in new tab,
 // sends profile text via postMessage (bypasses CSP/CORS entirely).
@@ -312,9 +312,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white relative">
-
-      {/* Ambient 3D mesh background — always visible, muted */}
-      <AmbientBackground />
 
       {/* NAV */}
       <Nav showHomeLinks />
