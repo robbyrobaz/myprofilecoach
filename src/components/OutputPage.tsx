@@ -88,8 +88,56 @@ function CheckIcon() {
   )
 }
 
+function DownloadCard({ icon, title, description, status, loadingText, buttonLabel, onDownload, onReset }: {
+  icon: string; title: string; description: string
+  status: 'idle' | 'loading' | 'done' | 'error'
+  loadingText: string; buttonLabel: string
+  onDownload: () => void; onReset: () => void
+}) {
+  return (
+    <div className="rounded-2xl border border-white/[0.06] bg-slate-900/60 backdrop-blur-md p-6 flex items-center justify-between gap-4">
+      <div className="flex items-center gap-4">
+        <span className="text-3xl">{icon}</span>
+        <div>
+          <h3 className="font-semibold text-slate-200 text-sm mb-0.5">{title}</h3>
+          <p className="text-slate-400 text-xs leading-relaxed">{description}</p>
+        </div>
+      </div>
+      <div className="flex-shrink-0">
+        {status === 'idle' && (
+          <Button onClick={onDownload} className="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl px-5 h-9 text-sm">
+            {buttonLabel}
+          </Button>
+        )}
+        {status === 'loading' && (
+          <div className="flex items-center gap-2 text-slate-400 text-sm px-2">
+            <svg className="animate-spin h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            {loadingText}
+          </div>
+        )}
+        {status === 'done' && (
+          <div className="text-right space-y-1">
+            <p className="text-emerald-400 text-xs font-medium">✓ Downloaded</p>
+            <button onClick={onReset} className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2">Again</button>
+          </div>
+        )}
+        {status === 'error' && (
+          <div className="text-right space-y-1">
+            <p className="text-red-400 text-xs">Failed</p>
+            <button onClick={onReset} className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2">Retry</button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function OutputPage({ output, sessionId }: Props) {
   const [pdfStatus, setPdfStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [docxStatus, setDocxStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const scoreDelta = output.afterScore - output.beforeScore
   const shareText = `Just went from ${output.beforeScore} → ${output.afterScore}/100 on my LinkedIn score using AI. Took 15 minutes. myprofilecoach.com`
 
@@ -101,28 +149,43 @@ export default function OutputPage({ output, sessionId }: Props) {
     ),
   ].join('\n')
 
-  async function handleGeneratePdf() {
-    setPdfStatus('loading')
+  async function handleDownload(endpoint: string, defaultFilename: string, setStatus: (s: 'idle' | 'loading' | 'done' | 'error') => void) {
+    setStatus('loading')
     try {
-      const res = await fetch('/api/pdf', {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId }),
       })
       if (!res.ok) throw new Error('failed')
+      const disposition = res.headers.get('Content-Disposition') ?? ''
+      const match = disposition.match(/filename="(.+?)"/)
+      const filename = match?.[1] ?? defaultFilename
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `resume-optimized.pdf`
+      a.download = filename
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-      setPdfStatus('done')
+      setStatus('done')
     } catch {
-      setPdfStatus('error')
+      setStatus('error')
     }
+  }
+
+  function handleDownloadTxt() {
+    const blob = new Blob([allText], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'resume-optimized.txt'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -167,7 +230,7 @@ export default function OutputPage({ output, sessionId }: Props) {
               LinkedIn Profile
             </TabsTrigger>
             <TabsTrigger value="resume" className="flex-1 data-[state=active]:bg-cyan-600 data-[state=active]:text-white text-slate-300 data-[state=inactive]:text-slate-300">
-              Resume PDF
+              Downloads
             </TabsTrigger>
           </TabsList>
 
@@ -234,47 +297,47 @@ export default function OutputPage({ output, sessionId }: Props) {
             ))}
           </TabsContent>
 
-          {/* Resume PDF tab */}
-          <TabsContent value="resume" className="pt-5">
-            <div className="rounded-2xl border border-white/[0.06] bg-slate-900/60 backdrop-blur-md p-10 text-center space-y-5">
-              <div className="text-5xl">📄</div>
-              <div>
-                <h3 className="font-semibold text-slate-200 text-lg mb-2">ATS-Friendly PDF Resume</h3>
-                <p className="text-slate-400 text-sm max-w-xs mx-auto leading-relaxed">
-                  Download your optimized profile as a clean, recruiter-ready PDF resume.
-                </p>
+          {/* Downloads tab */}
+          <TabsContent value="resume" className="pt-5 space-y-4">
+
+            {/* PDF */}
+            <DownloadCard
+              icon="📄"
+              title="PDF Resume"
+              description="ATS-friendly PDF, ready to attach to job applications."
+              status={pdfStatus}
+              loadingText="Building PDF..."
+              buttonLabel="Download PDF"
+              onDownload={() => handleDownload('/api/pdf', 'resume-optimized.pdf', setPdfStatus)}
+              onReset={() => setPdfStatus('idle')}
+            />
+
+            {/* Word */}
+            <DownloadCard
+              icon="📝"
+              title="Word Document (.docx)"
+              description="Editable Word doc — customize before sending to recruiters."
+              status={docxStatus}
+              loadingText="Building Word doc..."
+              buttonLabel="Download Word"
+              onDownload={() => handleDownload('/api/docx', 'resume-optimized.docx', setDocxStatus)}
+              onReset={() => setDocxStatus('idle')}
+            />
+
+            {/* Plain text */}
+            <div className="rounded-2xl border border-white/[0.06] bg-slate-900/60 backdrop-blur-md p-6 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <span className="text-3xl">🔤</span>
+                <div>
+                  <h3 className="font-semibold text-slate-200 text-sm mb-0.5">Plain Text (.txt)</h3>
+                  <p className="text-slate-400 text-xs leading-relaxed">Paste into any ATS or job portal without formatting issues.</p>
+                </div>
               </div>
-              {pdfStatus === 'idle' && (
-                <Button onClick={handleGeneratePdf} className="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl px-8 h-11">
-                  Download PDF Resume
-                </Button>
-              )}
-              {pdfStatus === 'loading' && (
-                <div className="flex items-center justify-center gap-2 text-slate-400 text-sm">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Building your PDF...
-                </div>
-              )}
-              {pdfStatus === 'done' && (
-                <div className="space-y-3">
-                  <p className="text-emerald-400 text-sm font-medium">✓ PDF downloaded successfully</p>
-                  <button onClick={() => setPdfStatus('idle')} className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2">
-                    Download again
-                  </button>
-                </div>
-              )}
-              {pdfStatus === 'error' && (
-                <div className="space-y-2">
-                  <p className="text-red-400 text-sm">PDF generation failed.</p>
-                  <button onClick={() => setPdfStatus('idle')} className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2">
-                    Try again
-                  </button>
-                </div>
-              )}
+              <Button onClick={handleDownloadTxt} className="bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl px-5 h-9 text-sm flex-shrink-0">
+                Download TXT
+              </Button>
             </div>
+
           </TabsContent>
         </Tabs>
 
