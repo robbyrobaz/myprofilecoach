@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
 import { logger } from '@/lib/logger'
 
+export const maxDuration = 60
+
 const SCRAPER_URL = process.env.LINKEDIN_SCRAPER_URL // e.g. https://omen-claw.tail76e7df.ts.net/linkedin-scraper
 const SCRAPER_TOKEN = process.env.LINKEDIN_SCRAPER_TOKEN
 
