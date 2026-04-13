@@ -55,7 +55,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
   const particlesRef = useRef<THREE.Points>(null)
 
   const lerpedMouse = useRef({ x: 0, y: 0 })
-  const lerpedIntensity = useRef(0.4)
+  const lerpedIntensity = useRef(0.25)
 
   const COUNT = 80
   const PARTICLE_COUNT = 250
@@ -156,8 +156,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
         nodesRef.current.setMatrixAt(i, dummy.matrix)
 
         const color = new THREE.Color()
-        // Brighter in ambient mode
-        const brightness = 0.45 + I * 0.3
+        const brightness = 0.3 + I * 0.45
         if (i < NODE_LABELS.length) {
           color.setHSL(0.52 + Math.sin(t * 1.5 + i) * 0.03, 0.7, brightness + pulse * 0.15)
         } else {
@@ -187,8 +186,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
         const dist = a.distanceTo(b)
         const base = Math.max(0, 1 - dist / 3.0)
 
-        // Much brighter ambient lines
-        const brightnessScale = 0.25 + I * 0.4
+        const brightnessScale = 0.12 + I * 0.5
         const brightness = base * (brightnessScale + pulse * (0.2 + I * 0.3))
         const boost = (i < NODE_LABELS.length || j < NODE_LABELS.length) ? 1.5 : 1.0
         const shift = Math.sin(t * (waveSpeed * 1.2) + e * 0.7) * 0.5 + 0.5
@@ -380,7 +378,7 @@ export default function JarvisBackground() {
   const intensityRef = useRef(0.4)
 
   useEffect(() => {
-    intensityRef.current = state.mode === 'active' ? 1.0 : 0.4
+    intensityRef.current = state.mode === 'active' ? 1.0 : 0.25
   }, [state.mode])
 
   return (
@@ -406,7 +404,7 @@ export default function JarvisBackground() {
         style={{
           zIndex: 1,
           background: 'radial-gradient(ellipse at center, transparent 30%, rgba(5,5,16,0.7) 100%)',
-          opacity: state.mode === 'active' ? 0.3 : 0.7,
+          opacity: state.mode === 'active' ? 0.3 : 0.85,
         }}
       />
 
