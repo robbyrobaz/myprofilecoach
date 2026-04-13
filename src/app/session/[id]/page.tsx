@@ -151,9 +151,9 @@ export default function SessionPage() {
   if (stage === 'scored' && session.score) {
     content = <ScoreReveal score={session.score} sessionId={session.id} keywords={session.keywords ?? []} parsedRoles={session.parsedProfile?.roles ?? []} onStartTransition={startTransition} onSessionUpdate={(s) => { pausePollRef.current = false; setSession(s) }} />
   } else if ((stage === 'interviewing' || stage === 'answering') && session.interviewQuestions) {
-    content = <InterviewPhase questions={session.interviewQuestions} sessionId={session.id} />
+    content = <InterviewPhase questions={session.interviewQuestions} sessionId={session.id} onStartTransition={startTransition} onSessionUpdate={(s) => { pausePollRef.current = false; setSession(s) }} />
   } else if ((stage === 'suggestions' || stage === 'reviewing') && session.suggestionCards) {
-    content = <SuggestionReview cards={session.suggestionCards} sessionId={session.id} />
+    content = <SuggestionReview cards={session.suggestionCards} sessionId={session.id} onStartTransition={startTransition} onSessionUpdate={(s) => { pausePollRef.current = false; setSession(s) }} />
   } else if ((stage === 'complete' || stage === 'pdf_ready') && session.finalizedLinkedIn) {
     content = <OutputPage output={session.finalizedLinkedIn} sessionId={session.id} />
   } else {

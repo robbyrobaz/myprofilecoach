@@ -1,20 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import type { InterviewQuestion } from '@/lib/types'
+import { useState } from 'react'
+import type { InterviewQuestion, SessionState } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
-import { useJarvis } from '@/components/JarvisContext'
 
 interface Props {
   questions: InterviewQuestion[]
   sessionId: string
+  onStartTransition?: (stage: string, jarvisTitle: string, duration: number) => void
+  onSessionUpdate?: (session: SessionState) => void
 }
 
-export default function InterviewPhase({ questions, sessionId }: Props) {
-  const router = useRouter()
+export default function InterviewPhase({ questions, sessionId, onStartTransition, onSessionUpdate }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [currentAnswer, setCurrentAnswer] = useState('')
@@ -53,6 +52,7 @@ export default function InterviewPhase({ questions, sessionId }: Props) {
   async function submitAnswers(finalAnswers: Record<number, string>) {
     setSubmitting(true)
     setError('')
+    onStartTransition?.('processing', 'Analyzing Your Experience', 20000)
     try {
       const res = await fetch('/api/answers', {
         method: 'POST',
@@ -63,23 +63,18 @@ export default function InterviewPhase({ questions, sessionId }: Props) {
         const data = await res.json().catch(() => ({}))
         throw new Error((data as { error?: string })?.error ?? 'Failed to submit answers')
       }
-      router.push(`/session/${sessionId}`)
-      router.refresh()
+      const sessionRes = await fetch(`/api/session/${sessionId}`, { cache: 'no-store' })
+      if (sessionRes.ok && onSessionUpdate) {
+        const updated = await sessionRes.json()
+        onSessionUpdate(updated)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setSubmitting(false)
     }
   }
 
-  const { activate } = useJarvis()
-
-  useEffect(() => {
-    if (submitting) {
-      activate('Analyzing Your Experience', { expectedDuration: 20000 })
-    }
-  }, [submitting, activate])
-
-  if (submitting) return null // Jarvis overlay handles the UI
+  if (submitting) return null
 
   return (
     <div className="min-h-screen text-slate-100 px-4 py-12 relative z-10">

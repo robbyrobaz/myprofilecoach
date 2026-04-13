@@ -259,6 +259,7 @@ CRITICAL RULES:
 - NEVER invent metrics, numbers, or statistics the user did not provide. Do NOT fabricate placement counts, percentages, dollar amounts, or team sizes. If no metric was provided, write strong impact language without numbers (e.g., "Accelerated time-to-fill across multiple divisions" NOT "Reduced time-to-fill by 35%").
 - NEVER use placeholder brackets like [X%], [N+], or [insert number]. Every bullet must be complete and ready to paste into LinkedIn as-is.
 - Each role MUST have UNIQUE bullets. If someone held multiple similar roles (especially at the same company), differentiate by: scope changes, team growth, new responsibilities, different divisions/projects, or career progression. Do NOT repeat or paraphrase the same bullet across roles.
+- VARY YOUR OPENING VERBS. Never start two bullets with the same verb across the entire profile. Avoid overusing "Led", "Spearheaded", or "Drove". Rotate through strong action verbs: Architected, Launched, Negotiated, Pioneered, Transformed, Streamlined, Orchestrated, Championed, Redesigned, Accelerated, etc. Each bullet's first word must be unique across all roles.
 - Only use numbers that came directly from the user's profile text or their interview answers.
 
 Return JSON array:
@@ -308,6 +309,7 @@ IMPORTANT RULES:
 - Include ALL ${parsedProfile.roles.length} roles from the original profile — not just the ones with approved changes. Apply approved changes to the relevant roles, keep original bullets for roles without changes. Your output must contain exactly ${parsedProfile.roles.length} roles.
 - NEVER invent metrics, numbers, or statistics not present in the original profile or approved changes. No fabricated placement counts, percentages, or dollar amounts. No placeholder brackets like [X%] or [N+]. Every bullet must be complete and paste-ready.
 - Each role MUST have unique, differentiated bullets. Do NOT repeat or paraphrase the same bullet across multiple roles — even if they are similar titles at the same company.
+- VARY YOUR OPENING VERBS. Never start two bullets with the same verb across the entire profile. Avoid overusing "Led", "Spearheaded", or "Drove". Rotate through: Architected, Launched, Negotiated, Pioneered, Transformed, Streamlined, Orchestrated, Championed, Redesigned, Accelerated, etc.
 {
   "headline": "string",
   "about": "string",

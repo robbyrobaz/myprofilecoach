@@ -1,23 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import type { SuggestionCard } from '@/lib/types'
+import { useState } from 'react'
+import type { SuggestionCard, SessionState } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { useJarvis } from '@/components/JarvisContext'
 
 interface Props {
   cards: SuggestionCard[]
   sessionId: string
+  onStartTransition?: (stage: string, jarvisTitle: string, duration: number) => void
+  onSessionUpdate?: (session: SessionState) => void
 }
 
 type CardState = SuggestionCard & { _editDraft?: string }
 
-export default function SuggestionReview({ cards: initialCards, sessionId }: Props) {
-  const router = useRouter()
+export default function SuggestionReview({ cards: initialCards, sessionId, onStartTransition, onSessionUpdate }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [cardStates, setCardStates] = useState<CardState[]>(
     initialCards.map((c) => ({ ...c, status: 'pending' as const }))
@@ -75,6 +74,7 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
   async function handleFinalize() {
     setFinalizing(true)
     setError('')
+    onStartTransition?.('finalizing', 'Finalizing Profile', 60000)
     try {
       const res = await fetch('/api/finalize', {
         method: 'POST',
@@ -85,23 +85,18 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
         const data = await res.json().catch(() => ({}))
         throw new Error((data as { error?: string })?.error ?? 'Failed to finalize profile')
       }
-      router.push(`/session/${sessionId}`)
-      router.refresh()
+      const sessionRes = await fetch(`/api/session/${sessionId}`, { cache: 'no-store' })
+      if (sessionRes.ok && onSessionUpdate) {
+        const updated = await sessionRes.json()
+        onSessionUpdate(updated)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setFinalizing(false)
     }
   }
 
-  const { activate } = useJarvis()
-
-  useEffect(() => {
-    if (finalizing) {
-      activate('Finalizing Profile', { expectedDuration: 60000 })
-    }
-  }, [finalizing, activate])
-
-  if (finalizing) return null // Jarvis overlay handles the UI
+  if (finalizing) return null
 
   const statusBadge = (status: SuggestionCard['status']) => {
     if (status === 'approved') return <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs">Approved</Badge>
