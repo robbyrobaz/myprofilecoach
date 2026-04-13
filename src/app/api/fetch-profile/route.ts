@@ -25,6 +25,14 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Only LinkedIn profile URLs are supported' }, { status: 400 })
     }
 
+    // /me is a self-referencing URL that only resolves when logged in as that user
+    if (parsed.pathname === '/me' || parsed.pathname.startsWith('/me/')) {
+      return Response.json(
+        { error: "That's a personal shortcut URL (/me) — it only works when you're logged in. Please use your public profile URL (linkedin.com/in/your-name). On mobile: go to your profile → tap the 3 dots → Copy link." },
+        { status: 422 }
+      )
+    }
+
     if (!SCRAPER_URL || !SCRAPER_TOKEN) {
       logger.warn('/api/fetch-profile', 'scraper not configured')
       return Response.json(

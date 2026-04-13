@@ -106,6 +106,15 @@ function HeroForm() {
 
     if (mode === 'url') {
       if (!linkedinUrl.trim()) { setError('Please enter your LinkedIn profile URL.'); return }
+      // Catch /me URLs — these are self-referencing and won't work for scraping
+      try {
+        const u = new URL(linkedinUrl.trim())
+        if (u.pathname === '/me' || u.pathname.startsWith('/me/') || u.pathname === '/me?') {
+          setMode('paste')
+          setError("That's your personal LinkedIn shortcut URL (/me) — it only works when you're logged in, so we can't read it. Instead: go to your profile, tap the 3 dots → \"Copy link\", or look for your URL like linkedin.com/in/your-name.")
+          return
+        }
+      } catch { /* invalid URL will be caught by the API */ }
       if (!targetRole.trim()) { setError('Please enter a target role.'); return }
       activate('Analyzing Profile', { subtitle: targetRole, expectedDuration: 120000 })
       setLoading(true)
@@ -193,7 +202,7 @@ function HeroForm() {
           <Input
             value={linkedinUrl}
             onChange={(e) => setLinkedinUrl(e.target.value)}
-            placeholder="https://www.linkedin.com/in/your-name"
+            placeholder="https://www.linkedin.com/in/your-name (not /me)"
             type="url"
             className="h-11 bg-white/5 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:border-cyan-500 focus-visible:ring-cyan-500/20"
             disabled={loading}
