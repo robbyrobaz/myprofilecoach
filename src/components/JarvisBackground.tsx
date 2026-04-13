@@ -33,8 +33,8 @@ const NODE_LABELS = [
 ]
 
 // --- Floating label ---
-function NodeLabel({ nodeData, index, label, intensity }: {
-  nodeData: THREE.Vector3[]; index: number; label: string; intensity: React.RefObject<number>
+function NodeLabel({ nodeData, index, label }: {
+  nodeData: THREE.Vector3[]; index: number; label: string
 }) {
   const ref = useRef<THREE.Group>(null)
   useFrame(() => {
@@ -282,7 +282,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
       </points>
 
       {NODE_LABELS.map((label, i) => (
-        <NodeLabel key={label} nodeData={nodeData} index={i} label={label} intensity={useRef(0)} />
+        <NodeLabel key={label} nodeData={nodeData} index={i} label={label} />
       ))}
     </group>
   )
