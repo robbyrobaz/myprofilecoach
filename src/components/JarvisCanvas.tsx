@@ -8,6 +8,33 @@ const COUNT = 80
 const PARTICLE_COUNT = 250
 const EDGE_DIST = 3.2
 
+const NODE_LABELS = [
+  'Neural Link', 'Career Graph', 'Skill Vector', 'Impact Score',
+  'Keyword Mesh', 'Role Tensor', 'Signal Node', 'Pattern Engine',
+  'Recruiter Index', 'Visibility Map', 'Achievement Net', 'Context Layer',
+  'Semantic Core', 'Influence Path', 'Growth Vector', 'Query Matrix',
+  'Profile Rank', 'Match Score', 'Data Stream', 'Insight Pulse',
+  'Authority Node', 'Network Edge', 'Talent Graph', 'Parse Engine',
+  'Relevance Map', 'Industry Scan', 'Position Lock', 'Boost Signal',
+  'Merit Index', 'Topology Link',
+]
+
+function makeTextTexture(label: string): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas')
+  canvas.width = 256
+  canvas.height = 64
+  const ctx = canvas.getContext('2d')!
+  ctx.clearRect(0, 0, 256, 64)
+  ctx.font = '600 22px system-ui, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillStyle = '#67e8f9'
+  ctx.fillText(label, 128, 32)
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.needsUpdate = true
+  return tex
+}
+
 function MouseTracker({ mouseRef }: { mouseRef: React.RefObject<{ x: number; y: number }> }) {
   useEffect(() => {
     function onMove(e: MouseEvent) {
@@ -78,6 +105,24 @@ function NodeNetwork({ mouseRef, intensityRef }: {
   }, [nodeData])
 
   const dummy = useMemo(() => new THREE.Object3D(), [])
+
+  // Sprite labels for first 30 nodes
+  const labelSprites = useMemo(() => {
+    return NODE_LABELS.map((label, i) => {
+      const tex = makeTextTexture(label)
+      const mat = new THREE.SpriteMaterial({
+        map: tex,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+      const sprite = new THREE.Sprite(mat)
+      sprite.scale.set(1.2, 0.3, 1)
+      return sprite
+    })
+  }, [])
+  const labelsGroupRef = useRef<THREE.Group>(null)
 
   useFrame(({ clock, camera }) => {
     const t = clock.getElapsedTime()
@@ -163,6 +208,17 @@ function NodeNetwork({ mouseRef, intensityRef }: {
       colorAttr.needsUpdate = true
     }
 
+    // Labels — positioned above their node, opacity tied to intensity
+    if (labelsGroupRef.current) {
+      for (let i = 0; i < labelSprites.length; i++) {
+        const sprite = labelSprites[i]
+        const pos = nodeData[i]
+        sprite.position.set(pos.x, pos.y + 0.15, pos.z)
+        const flicker = 0.7 + Math.sin(t * 1.5 + i * 2.1) * 0.3
+        ;(sprite.material as THREE.SpriteMaterial).opacity = I * 0.7 * flicker
+      }
+    }
+
     // Particles
     if (particlesRef.current) {
       const posAttr = particlesRef.current.geometry.getAttribute('position') as THREE.BufferAttribute
@@ -204,6 +260,12 @@ function NodeNetwork({ mouseRef, intensityRef }: {
         </bufferGeometry>
         <pointsMaterial size={0.008} color="#67e8f9" transparent opacity={0.15} blending={THREE.AdditiveBlending} sizeAttenuation />
       </points>
+
+      <group ref={labelsGroupRef}>
+        {labelSprites.map((sprite, i) => (
+          <primitive key={i} object={sprite} />
+        ))}
+      </group>
     </group>
   )
 }
