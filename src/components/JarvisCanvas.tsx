@@ -30,7 +30,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
   const particlesRef = useRef<THREE.Points>(null)
 
   const lerpedMouse = useRef({ x: 0, y: 0 })
-  const lerpedIntensity = useRef(0.08)
+  const lerpedIntensity = useRef(0.04)
 
   const nodeData = useMemo(() => {
     const positions: THREE.Vector3[] = []
@@ -213,7 +213,7 @@ export default function JarvisCanvas({ mode }: { mode: 'ambient' | 'active' }) {
   const intensityRef = useRef(0.25)
 
   useEffect(() => {
-    intensityRef.current = mode === 'active' ? 1.0 : 0.08
+    intensityRef.current = mode === 'active' ? 1.0 : 0.04
   }, [mode])
 
   return (
