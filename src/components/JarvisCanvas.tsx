@@ -213,7 +213,7 @@ export default function JarvisCanvas({ mode }: { mode: 'ambient' | 'active' }) {
   const intensityRef = useRef(0.25)
 
   useEffect(() => {
-    intensityRef.current = mode === 'active' ? 1.0 : 0.04
+    intensityRef.current = mode === 'active' ? 0.75 : 0.04
   }, [mode])
 
   return (
