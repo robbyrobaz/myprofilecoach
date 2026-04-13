@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { InterviewQuestion } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
-import { LoadingHUD } from '@/components/AnalysisHUD'
+import { useJarvis } from '@/components/JarvisContext'
 
 interface Props {
   questions: InterviewQuestion[]
@@ -71,9 +71,15 @@ export default function InterviewPhase({ questions, sessionId }: Props) {
     }
   }
 
-  if (submitting) {
-    return <LoadingHUD message="Analyzing Your Experience" expectedDuration={20000} />
-  }
+  const { activate } = useJarvis()
+
+  useEffect(() => {
+    if (submitting) {
+      activate('Analyzing Your Experience', { expectedDuration: 20000 })
+    }
+  }, [submitting, activate])
+
+  if (submitting) return null // Jarvis overlay handles the UI
 
   return (
     <div className="min-h-screen text-slate-100 px-4 py-12 relative z-10">
@@ -92,21 +98,21 @@ export default function InterviewPhase({ questions, sessionId }: Props) {
           </div>
           <div className="h-1.5 rounded-full bg-slate-700 overflow-hidden">
             <div
-              className="h-full rounded-full bg-indigo-500 transition-all duration-500"
+              className="h-full rounded-full bg-cyan-500 transition-all duration-500"
               style={{ width: `${((currentIndex + 1) / total) * 100}%` }}
             />
           </div>
         </div>
 
         {/* Question card */}
-        <Card className="bg-slate-800/60 border-slate-700">
+        <Card className="bg-white/[0.04] backdrop-blur-sm border-white/[0.06]">
           <CardContent className="pt-8 pb-8 space-y-6">
             {/* Context */}
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
                 About your role at
               </span>
-              <span className="text-sm font-semibold text-indigo-300">{current.company}</span>
+              <span className="text-sm font-semibold text-cyan-300">{current.company}</span>
             </div>
 
             {/* Question */}
@@ -127,7 +133,7 @@ export default function InterviewPhase({ questions, sessionId }: Props) {
                 value={currentAnswer}
                 onChange={(e) => setCurrentAnswer(e.target.value)}
                 placeholder="Write a few sentences about your experience, achievements, or impact. Raw notes are fine — AI will polish them."
-                className="min-h-36 bg-slate-900/50 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20 resize-none"
+                className="min-h-36 bg-slate-900/50 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:border-cyan-500 focus-visible:ring-cyan-500/20 resize-none"
               />
             </div>
 
@@ -145,7 +151,7 @@ export default function InterviewPhase({ questions, sessionId }: Props) {
               </button>
               <Button
                 onClick={handleNext}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl px-6"
+                className="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl px-6"
               >
                 {isLast ? 'Submit answers →' : 'Next →'}
               </Button>
@@ -155,12 +161,12 @@ export default function InterviewPhase({ questions, sessionId }: Props) {
 
         {/* Answered summary */}
         {Object.keys(answers).length > 0 && (
-          <div className="rounded-xl border border-slate-700 bg-slate-800/30 p-4">
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.04] backdrop-blur-sm p-4">
             <p className="text-xs text-slate-400 mb-2 uppercase tracking-wider">Answered so far</p>
             <div className="space-y-1">
               {Object.entries(answers).map(([idx, ans]) => (
                 <div key={idx} className="flex items-start gap-2 text-sm">
-                  <span className="text-indigo-400 flex-shrink-0">✓</span>
+                  <span className="text-cyan-400 flex-shrink-0">✓</span>
                   <span className="text-slate-400 truncate">{ans.slice(0, 80)}{ans.length > 80 ? '…' : ''}</span>
                 </div>
               ))}

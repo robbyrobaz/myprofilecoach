@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import Nav from '@/components/Nav'
-import AnalysisHUD from '@/components/AnalysisHUD'
+import { useJarvis } from '@/components/JarvisContext'
 
 // Bookmarklet — runs on linkedin.com, scrolls/expands profile, opens MPC in new tab,
 // sends profile text via postMessage (bypasses CSP/CORS entirely).
@@ -45,7 +45,7 @@ function BookmarkletHelper() {
           href="#"
           onClick={(e) => e.preventDefault()}
           draggable
-          className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600/20 border border-indigo-500/40 px-3 py-1.5 text-xs font-medium text-indigo-300 hover:bg-indigo-600/30 cursor-grab active:cursor-grabbing select-none"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-600/20 border border-cyan-500/40 px-3 py-1.5 text-xs font-medium text-cyan-300 hover:bg-cyan-600/30 cursor-grab active:cursor-grabbing select-none"
         >
           <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 3a4 4 0 110 8 4 4 0 010-8zm0 10c-4 0-6 2-6 3v1h12v-1c0-1-2-3-6-3z"/></svg>
           Import LinkedIn Profile
@@ -58,7 +58,8 @@ function BookmarkletHelper() {
 
 type InputMode = 'url' | 'paste'
 
-function HeroForm({ onAnalyzing }: { onAnalyzing: (role: string) => void }) {
+function HeroForm() {
+  const { activate } = useJarvis()
   const router = useRouter()
   const [mode, setMode] = useState<InputMode>('url')
   const [linkedinUrl, setLinkedinUrl] = useState('')
@@ -106,7 +107,7 @@ function HeroForm({ onAnalyzing }: { onAnalyzing: (role: string) => void }) {
     if (mode === 'url') {
       if (!linkedinUrl.trim()) { setError('Please enter your LinkedIn profile URL.'); return }
       if (!targetRole.trim()) { setError('Please enter a target role.'); return }
-      onAnalyzing(targetRole)
+      activate('Analyzing Profile', { subtitle: targetRole, expectedDuration: 120000 })
       setLoading(true)
       setLoadingMsg('Fetching your LinkedIn profile...')
       try {
@@ -130,7 +131,7 @@ function HeroForm({ onAnalyzing }: { onAnalyzing: (role: string) => void }) {
     } else {
       if (!profileText.trim()) { setError('Please paste your LinkedIn profile text.'); return }
       if (!targetRole.trim()) { setError('Please enter a target role.'); return }
-      onAnalyzing(targetRole)
+      activate('Analyzing Profile', { subtitle: targetRole, expectedDuration: 120000 })
       setLoading(true)
     }
 
@@ -166,7 +167,7 @@ function HeroForm({ onAnalyzing }: { onAnalyzing: (role: string) => void }) {
         <button
           type="button"
           onClick={() => { setMode('url'); setError('') }}
-          className={`flex-1 py-2 text-sm font-medium transition-colors ${mode === 'url' ? 'bg-indigo-600 text-white' : 'bg-white/5 text-slate-400 hover:text-slate-200'}`}
+          className={`flex-1 py-2 text-sm font-medium transition-colors ${mode === 'url' ? 'bg-cyan-600 text-white' : 'bg-white/5 text-slate-400 hover:text-slate-200'}`}
           disabled={loading}
         >
           LinkedIn URL
@@ -174,7 +175,7 @@ function HeroForm({ onAnalyzing }: { onAnalyzing: (role: string) => void }) {
         <button
           type="button"
           onClick={() => { setMode('paste'); setError('') }}
-          className={`flex-1 py-2 text-sm font-medium transition-colors ${mode === 'paste' ? 'bg-indigo-600 text-white' : 'bg-white/5 text-slate-400 hover:text-slate-200'}`}
+          className={`flex-1 py-2 text-sm font-medium transition-colors ${mode === 'paste' ? 'bg-cyan-600 text-white' : 'bg-white/5 text-slate-400 hover:text-slate-200'}`}
           disabled={loading}
         >
           Paste text
@@ -189,7 +190,7 @@ function HeroForm({ onAnalyzing }: { onAnalyzing: (role: string) => void }) {
             onChange={(e) => setLinkedinUrl(e.target.value)}
             placeholder="https://www.linkedin.com/in/your-name"
             type="url"
-            className="h-11 bg-white/5 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20"
+            className="h-11 bg-white/5 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:border-cyan-500 focus-visible:ring-cyan-500/20"
             disabled={loading}
           />
         </div>
@@ -200,7 +201,7 @@ function HeroForm({ onAnalyzing }: { onAnalyzing: (role: string) => void }) {
             <button
               type="button"
               onClick={() => setShowBookmarklet(v => !v)}
-              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+              className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
             >
               {showBookmarklet ? 'Hide helper' : 'Desktop shortcut ↗'}
             </button>
@@ -216,7 +217,7 @@ function HeroForm({ onAnalyzing }: { onAnalyzing: (role: string) => void }) {
             value={profileText}
             onChange={(e) => setProfileText(e.target.value)}
             placeholder="Copy everything from your LinkedIn profile — headline, about, experience bullets, skills — and paste it here..."
-            className="min-h-40 max-h-56 overflow-y-auto bg-white/5 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20 resize-none"
+            className="min-h-40 max-h-56 overflow-y-auto bg-white/5 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:border-cyan-500 focus-visible:ring-cyan-500/20 resize-none"
             disabled={loading}
           />
           <p className="text-xs text-slate-500 mt-1.5">On mobile: open linkedin.com in browser → your profile → select all → copy.</p>
@@ -229,7 +230,7 @@ function HeroForm({ onAnalyzing }: { onAnalyzing: (role: string) => void }) {
           value={targetRole}
           onChange={(e) => setTargetRole(e.target.value)}
           placeholder="e.g. Senior Product Manager at a Series B startup"
-          className="h-11 bg-white/5 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/20"
+          className="h-11 bg-white/5 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:border-cyan-500 focus-visible:ring-cyan-500/20"
           disabled={loading}
         />
       </div>
@@ -239,7 +240,7 @@ function HeroForm({ onAnalyzing }: { onAnalyzing: (role: string) => void }) {
       <Button
         type="submit"
         disabled={loading}
-        className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-base rounded-xl transition-all disabled:opacity-60 shadow-lg shadow-indigo-500/25"
+        className="w-full h-12 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-base rounded-xl transition-all disabled:opacity-60 shadow-lg shadow-cyan-500/25"
       >
         {loading ? (
           <span className="flex items-center gap-3">
@@ -304,12 +305,6 @@ function ScoreCard() {
 }
 
 export default function HomePage() {
-  const [analyzingRole, setAnalyzingRole] = useState<string | null>(null)
-
-  if (analyzingRole) {
-    return <AnalysisHUD targetRole={analyzingRole} />
-  }
-
   return (
     <div className="min-h-screen text-white relative">
 
@@ -342,7 +337,7 @@ export default function HomePage() {
 
             {/* Form */}
             <div id="score-form" className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6">
-              <HeroForm onAnalyzing={(role) => setAnalyzingRole(role)} />
+              <HeroForm />
             </div>
 
             <div className="flex items-center gap-6 mt-10">
@@ -466,7 +461,7 @@ export default function HomePage() {
             </ul>
             <a
               href="#score-form"
-              className="block w-full py-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-semibold text-base transition-all text-center shadow-lg shadow-indigo-500/25"
+              className="block w-full py-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-semibold text-base transition-all text-center shadow-lg shadow-cyan-500/25"
             >
               Get started — $20/mo
             </a>

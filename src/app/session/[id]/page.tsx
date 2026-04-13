@@ -8,9 +8,8 @@ import InterviewPhase from '@/components/InterviewPhase'
 import SuggestionReview from '@/components/SuggestionReview'
 import OutputPage from '@/components/OutputPage'
 import Nav from '@/components/Nav'
-import { LoadingHUD } from '@/components/AnalysisHUD'
+import { useJarvis } from '@/components/JarvisContext'
 
-// Isolated component so useSearchParams doesn't block the whole page
 function PaidDetector() {
   const searchParams = useSearchParams()
   useEffect(() => {
@@ -21,9 +20,26 @@ function PaidDetector() {
   return null
 }
 
+// Map stages to loading messages
+const LOADING_CONFIG: Record<string, { title: string; duration: number }> = {
+  scoring: { title: 'Analyzing Profile', duration: 120000 },
+  scored_no_data: { title: 'Scoring Profile', duration: 30000 },
+  interviewing_no_data: { title: 'Generating Questions', duration: 15000 },
+  answering_no_data: { title: 'Generating Questions', duration: 15000 },
+  processing: { title: 'Building Suggestions', duration: 30000 },
+  suggestions_no_data: { title: 'Building Suggestions', duration: 30000 },
+  reviewing_no_data: { title: 'Building Suggestions', duration: 30000 },
+  finalizing: { title: 'Finalizing Profile', duration: 60000 },
+  complete_no_data: { title: 'Finalizing Profile', duration: 60000 },
+  pdf_ready_no_data: { title: 'Finalizing Profile', duration: 60000 },
+  loading: { title: 'Loading Session', duration: 10000 },
+  fallback: { title: 'Analyzing Profile', duration: 120000 },
+}
+
 export default function SessionPage() {
   const { id } = useParams<{ id: string }>()
   const [session, setSession] = useState<SessionState | null | 'loading'>('loading')
+  const { activate, deactivate, state: jarvisState } = useJarvis()
 
   useEffect(() => {
     let cancelled = false
@@ -40,14 +56,12 @@ export default function SessionPage() {
       }
     }
 
-    // Stages that mean Claude is still working — keep polling
     const POLLING_STAGES = new Set(['scoring', 'scored', 'interviewing', 'answering', 'processing', 'suggestions', 'reviewing', 'finalizing'])
 
     async function poll() {
       const data = await load()
       if (!data || cancelled) return
       if (POLLING_STAGES.has(data.stage)) {
-        // Poll every 3s until stage settles into a renderable state
         setTimeout(poll, 3000)
       }
     }
@@ -56,13 +70,45 @@ export default function SessionPage() {
     return () => { cancelled = true }
   }, [id])
 
+  // Determine if we're in a loading state and manage Jarvis mode
+  useEffect(() => {
+    if (session === 'loading') {
+      activate('Loading Session', { expectedDuration: 10000 })
+      return
+    }
+    if (!session) {
+      deactivate()
+      return
+    }
+
+    const { stage } = session
+    let loadingKey: string | null = null
+
+    if (stage === 'scoring' || stage === 'finalizing') {
+      loadingKey = stage
+    } else if (stage === 'processing') {
+      loadingKey = 'processing'
+    } else if (stage === 'scored' && !session.score) {
+      loadingKey = 'scored_no_data'
+    } else if ((stage === 'interviewing' || stage === 'answering') && !session.interviewQuestions) {
+      loadingKey = `${stage}_no_data`
+    } else if ((stage === 'suggestions' || stage === 'reviewing') && !session.suggestionCards) {
+      loadingKey = `${stage}_no_data`
+    } else if ((stage === 'complete' || stage === 'pdf_ready') && !session.finalizedLinkedIn) {
+      loadingKey = `${stage}_no_data`
+    }
+
+    if (loadingKey) {
+      const config = LOADING_CONFIG[loadingKey] ?? LOADING_CONFIG.fallback
+      activate(config.title, { expectedDuration: config.duration })
+    } else {
+      deactivate()
+    }
+  }, [session, activate, deactivate])
+
+  // Loading / not found states — Jarvis handles the animation
   if (session === 'loading') {
-    return (
-      <>
-        <Suspense fallback={null}><PaidDetector /></Suspense>
-        <LoadingHUD message="Loading Session" expectedDuration={10000} />
-      </>
-    )
+    return <Suspense fallback={null}><PaidDetector /></Suspense>
   }
 
   if (!session) {
@@ -70,36 +116,21 @@ export default function SessionPage() {
       <>
         <Nav />
         <div className="min-h-screen flex items-center justify-center pt-16">
-          <p className="text-slate-400">Session not found. <a href="/" className="text-indigo-400 underline">Start over</a></p>
+          <p className="text-slate-400">Session not found. <a href="/" className="text-cyan-400 underline">Start over</a></p>
         </div>
       </>
     )
   }
 
+  // If Jarvis is active (loading), render nothing — the HUD overlay shows
+  if (jarvisState.mode === 'active') {
+    return <Suspense fallback={null}><PaidDetector /></Suspense>
+  }
+
+  // Content states
   const { stage } = session
-
-  // Loading states — full-screen HUD takeover (no Nav)
-  if (stage === 'scored' && !session.score) {
-    return <><Suspense fallback={null}><PaidDetector /></Suspense><LoadingHUD message="Scoring Profile" expectedDuration={30000} /></>
-  }
-  if ((stage === 'interviewing' || stage === 'answering') && !session.interviewQuestions) {
-    return <><Suspense fallback={null}><PaidDetector /></Suspense><LoadingHUD message="Generating Questions" expectedDuration={15000} /></>
-  }
-  if ((stage === 'suggestions' || stage === 'reviewing') && !session.suggestionCards) {
-    return <><Suspense fallback={null}><PaidDetector /></Suspense><LoadingHUD message="Building Suggestions" expectedDuration={30000} /></>
-  }
-  if ((stage === 'complete' || stage === 'pdf_ready') && !session.finalizedLinkedIn) {
-    return <><Suspense fallback={null}><PaidDetector /></Suspense><LoadingHUD message="Finalizing Profile" expectedDuration={60000} /></>
-  }
-  if (stage === 'processing') {
-    return <><Suspense fallback={null}><PaidDetector /></Suspense><LoadingHUD message="Building Suggestions" expectedDuration={30000} /></>
-  }
-  if (stage === 'scoring' || stage === 'finalizing') {
-    return <><Suspense fallback={null}><PaidDetector /></Suspense><LoadingHUD message="Analyzing Profile" expectedDuration={120000} /></>
-  }
-
-  // Content states — show with Nav
   let content: React.ReactNode
+
   if (stage === 'scored' && session.score) {
     content = <ScoreReveal score={session.score} sessionId={session.id} keywords={session.keywords ?? []} parsedRoles={session.parsedProfile?.roles ?? []} />
   } else if ((stage === 'interviewing' || stage === 'answering') && session.interviewQuestions) {
@@ -109,7 +140,7 @@ export default function SessionPage() {
   } else if ((stage === 'complete' || stage === 'pdf_ready') && session.finalizedLinkedIn) {
     content = <OutputPage output={session.finalizedLinkedIn} sessionId={session.id} />
   } else {
-    return <><Suspense fallback={null}><PaidDetector /></Suspense><LoadingHUD message="Analyzing Profile" expectedDuration={120000} /></>
+    return <Suspense fallback={null}><PaidDetector /></Suspense>
   }
 
   return (
@@ -120,4 +151,3 @@ export default function SessionPage() {
     </>
   )
 }
-

@@ -6,7 +6,7 @@ import type { ProfileScore, ParsedRole } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { LoadingHUD } from '@/components/AnalysisHUD'
+import { useJarvis } from '@/components/JarvisContext'
 
 interface Props {
   score: ProfileScore
@@ -133,10 +133,14 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
     }
   }
 
-  // Full-screen loading HUD when starting interview
-  if (interviewLoading) {
-    return <LoadingHUD message="Preparing Interview" expectedDuration={15000} />
-  }
+  const { activate } = useJarvis()
+
+  // Activate Jarvis when interview starts loading
+  useEffect(() => {
+    if (interviewLoading) {
+      activate('Preparing Interview', { expectedDuration: 15000 })
+    }
+  }, [interviewLoading, activate])
 
   const overallColor =
     score.overall >= 70
@@ -161,12 +165,12 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
           <p className="text-slate-400 text-sm">out of 100</p>
           <p className="mt-3 text-slate-300 text-base">
             Target role:{' '}
-            <span className="font-medium text-indigo-300">{score.targetRole}</span>
+            <span className="font-medium text-cyan-300">{score.targetRole}</span>
           </p>
         </div>
 
         {/* Breakdown */}
-        <Card className="bg-slate-900/80 backdrop-blur-sm border-slate-700">
+        <Card className="bg-white/[0.04] backdrop-blur-sm border-white/[0.06]">
           <CardContent className="pt-6 pb-6 space-y-4">
             <h2 className="font-semibold text-slate-200 mb-4">Score Breakdown</h2>
             <ScoreBar label="Headline" value={score.breakdown.headline} max={20} />
@@ -178,7 +182,7 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
         </Card>
 
         {/* Top problems */}
-        <Card className="bg-slate-900/80 backdrop-blur-sm border-slate-700">
+        <Card className="bg-white/[0.04] backdrop-blur-sm border-white/[0.06]">
           <CardContent className="pt-6 pb-6">
             <h2 className="font-semibold text-slate-200 mb-4">
               Critical Issues Found
@@ -216,7 +220,7 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
         </Card>
 
         {/* Keyword preview */}
-        <Card className="bg-slate-900/80 backdrop-blur-sm border-slate-700">
+        <Card className="bg-white/[0.04] backdrop-blur-sm border-white/[0.06]">
           <CardContent className="pt-6 pb-6">
             <h2 className="font-semibold text-slate-200 mb-1">Keyword Gap Analysis</h2>
             <p className="text-slate-400 text-sm mb-4">
@@ -294,13 +298,13 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
             )}
             <Button
               onClick={handleStartInterview}
-              className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base"
+              className="w-full h-12 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl text-base"
             >
               Start AI Interview →
             </Button>
           </div>
         ) : (
-          <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-indigo-900/30 to-slate-900/80 backdrop-blur-sm p-8 text-center space-y-4">
+          <div className="rounded-2xl border border-cyan-500/30 bg-white/[0.04] backdrop-blur-sm p-8 text-center space-y-4">
             <h3 className="text-xl font-bold text-slate-100">Fix your profile — fully</h3>
             <p className="text-slate-400 text-sm leading-relaxed">
               AI will interview you, surface your real achievements, and rewrite every section of your LinkedIn profile to rank in recruiter searches.
@@ -313,7 +317,7 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
                 'Copy-paste ready output',
               ].map((f) => (
                 <li key={f} className="flex items-center gap-2">
-                  <span className="text-indigo-400">✓</span> {f}
+                  <span className="text-cyan-400">✓</span> {f}
                 </li>
               ))}
             </ul>
@@ -323,13 +327,13 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="your@email.com"
-                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm"
+                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 text-sm"
               />
             )}
             <Button
               onClick={handleCheckout}
               disabled={checkoutLoading}
-              className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base disabled:opacity-60"
+              className="w-full h-12 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl text-base disabled:opacity-60"
             >
               {checkoutLoading ? 'Redirecting to checkout...' : 'Fix my profile — $20/mo, cancel anytime'}
             </Button>

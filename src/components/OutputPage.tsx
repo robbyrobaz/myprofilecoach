@@ -63,7 +63,7 @@ function CopyButton({ text, label, size = 'sm' }: { text: string; label?: string
       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
         copied
           ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
-          : 'border border-slate-600 text-slate-400 hover:border-indigo-500/60 hover:text-indigo-300 hover:bg-indigo-500/5'
+          : 'border border-slate-600 text-slate-400 hover:border-cyan-500/60 hover:text-cyan-300 hover:bg-cyan-500/5'
       }`}
     >
       {copied ? '✓ Copied' : label ?? 'Copy'}
@@ -129,8 +129,8 @@ export default function OutputPage({ output, sessionId }: Props) {
     <div className="min-h-screen text-slate-100 relative z-10">
 
       {/* Hero */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-slate-800/60 to-transparent border-b border-slate-800 px-4 py-14 text-center">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/20 via-transparent to-indigo-900/20 pointer-events-none" />
+      <div className="relative overflow-hidden bg-white/[0.03] border-b border-white/[0.06] px-4 py-14 text-center">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/10 via-transparent to-cyan-900/10 pointer-events-none" />
         <div className="relative">
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-sm font-medium text-emerald-300 mb-8">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -144,7 +144,7 @@ export default function OutputPage({ output, sessionId }: Props) {
               <div className="text-sm text-slate-500 mt-2 font-medium">Before</div>
             </div>
             <div className="flex flex-col items-center gap-1">
-              <div className="text-3xl text-indigo-400">→</div>
+              <div className="text-3xl text-cyan-400">→</div>
             </div>
             <div className="text-center">
               <div className="text-7xl font-bold text-emerald-400 tabular-nums leading-none">{output.afterScore}</div>
@@ -162,11 +162,11 @@ export default function OutputPage({ output, sessionId }: Props) {
 
         {/* Tabs */}
         <Tabs defaultValue="linkedin" className="w-full">
-          <TabsList className="w-full bg-slate-800 border border-slate-700">
-            <TabsTrigger value="linkedin" className="flex-1 data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-slate-300 data-[state=inactive]:text-slate-300">
+          <TabsList className="w-full bg-white/[0.04] border border-white/[0.06]">
+            <TabsTrigger value="linkedin" className="flex-1 data-[state=active]:bg-cyan-600 data-[state=active]:text-white text-slate-300 data-[state=inactive]:text-slate-300">
               LinkedIn Profile
             </TabsTrigger>
-            <TabsTrigger value="resume" className="flex-1 data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-slate-300 data-[state=inactive]:text-slate-300">
+            <TabsTrigger value="resume" className="flex-1 data-[state=active]:bg-cyan-600 data-[state=active]:text-white text-slate-300 data-[state=inactive]:text-slate-300">
               Resume PDF
             </TabsTrigger>
           </TabsList>
@@ -174,16 +174,16 @@ export default function OutputPage({ output, sessionId }: Props) {
           {/* LinkedIn tab */}
           <TabsContent value="linkedin" className="space-y-5 pt-5">
             {/* Copy all bar */}
-            <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700">
+            <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
               <p className="text-sm text-slate-400">Copy each section and paste directly into LinkedIn.</p>
               <CopyButton text={allText} label="Copy all" size="md" />
             </div>
 
             {/* Headline */}
-            <div className="rounded-2xl border border-slate-700 bg-slate-800/40 overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-700/60 bg-slate-800/60">
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.03]">
                 <div className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Headline</span>
                 </div>
                 <CopyButton text={output.headline} />
@@ -194,10 +194,10 @@ export default function OutputPage({ output, sessionId }: Props) {
             </div>
 
             {/* About */}
-            <div className="rounded-2xl border border-slate-700 bg-slate-800/40 overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-700/60 bg-slate-800/60">
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.03]">
                 <div className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">About / Summary</span>
                 </div>
                 <CopyButton text={stripMd(output.about)} />
@@ -209,8 +209,8 @@ export default function OutputPage({ output, sessionId }: Props) {
 
             {/* Experience roles */}
             {output.roles.map((role, i) => (
-              <div key={i} className="rounded-2xl border border-slate-700 bg-slate-800/40 overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-700/60 bg-slate-800/60">
+              <div key={i} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.03]">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <div className="h-1.5 w-1.5 rounded-full bg-violet-400 flex-shrink-0" />
@@ -225,7 +225,7 @@ export default function OutputPage({ output, sessionId }: Props) {
                 <div className="px-5 py-4 space-y-3">
                   {role.bullets.map((bullet, j) => (
                     <div key={j} className="flex items-start gap-3 text-sm text-slate-200 leading-relaxed">
-                      <span className="text-indigo-400 mt-0.5 flex-shrink-0 font-bold">•</span>
+                      <span className="text-cyan-400 mt-0.5 flex-shrink-0 font-bold">•</span>
                       <span>{bullet}</span>
                     </div>
                   ))}
@@ -236,7 +236,7 @@ export default function OutputPage({ output, sessionId }: Props) {
 
           {/* Resume PDF tab */}
           <TabsContent value="resume" className="pt-5">
-            <div className="rounded-2xl border border-slate-700 bg-slate-800/40 p-10 text-center space-y-5">
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-10 text-center space-y-5">
               <div className="text-5xl">📄</div>
               <div>
                 <h3 className="font-semibold text-slate-200 text-lg mb-2">ATS-Friendly PDF Resume</h3>
@@ -245,7 +245,7 @@ export default function OutputPage({ output, sessionId }: Props) {
                 </p>
               </div>
               {pdfStatus === 'idle' && (
-                <Button onClick={handleGeneratePdf} className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl px-8 h-11">
+                <Button onClick={handleGeneratePdf} className="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl px-8 h-11">
                   Download PDF Resume
                 </Button>
               )}
@@ -279,19 +279,19 @@ export default function OutputPage({ output, sessionId }: Props) {
         </Tabs>
 
         {/* Share */}
-        <div className="rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-800/60 to-indigo-900/10 p-6 space-y-4">
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.04] backdrop-blur-sm p-6 space-y-4">
           <div>
             <h3 className="font-semibold text-slate-200 mb-0.5">Share your win</h3>
             <p className="text-xs text-slate-500">Great for LinkedIn posts, Twitter/X, or TikTok</p>
           </div>
-          <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 text-sm text-slate-300 leading-relaxed italic">
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 text-sm text-slate-300 leading-relaxed italic">
             &ldquo;{shareText}&rdquo;
           </div>
           <CopyButton text={shareText} label="Copy for social" size="md" />
         </div>
 
         {/* Next steps */}
-        <div className="rounded-2xl border border-slate-700 bg-slate-800/30 p-6">
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.04] backdrop-blur-sm p-6">
           <h3 className="font-semibold text-slate-200 mb-4">What to do next</h3>
           <ol className="space-y-3">
             {[
@@ -302,7 +302,7 @@ export default function OutputPage({ output, sessionId }: Props) {
               'Turn on "Open to Work" to signal active job searching.',
             ].map((step, i) => (
               <li key={i} className="flex items-start gap-3 text-sm">
-                <span className="flex-shrink-0 h-5 w-5 rounded-full bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs flex items-center justify-center font-bold mt-0.5">
+                <span className="flex-shrink-0 h-5 w-5 rounded-full bg-cyan-600/30 border border-cyan-500/40 text-cyan-300 text-xs flex items-center justify-center font-bold mt-0.5">
                   {i + 1}
                 </span>
                 <span className="text-slate-400 leading-relaxed">{step}</span>
@@ -313,7 +313,7 @@ export default function OutputPage({ output, sessionId }: Props) {
 
         {/* Start over CTA */}
         <div className="text-center pb-4 space-y-3">
-          <a href="/" className="block text-sm text-slate-500 hover:text-indigo-400 transition-colors underline underline-offset-2">
+          <a href="/" className="block text-sm text-slate-500 hover:text-cyan-400 transition-colors underline underline-offset-2">
             Optimize another profile →
           </a>
         </div>

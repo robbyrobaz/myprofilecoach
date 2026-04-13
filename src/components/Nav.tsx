@@ -30,7 +30,7 @@ export default function Nav({ showHomeLinks = false }: NavProps) {
             Manage subscription
           </Link>
           {showHomeLinks && (
-            <a href="#score-form" className="h-9 px-5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold transition-all flex items-center">
+            <a href="#score-form" className="h-9 px-5 rounded-full bg-cyan-600 hover:bg-cyan-500 text-sm font-semibold transition-all flex items-center">
               Get started free
             </a>
           )}

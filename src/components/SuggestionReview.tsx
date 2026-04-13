@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { SuggestionCard } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { LoadingHUD } from '@/components/AnalysisHUD'
+import { useJarvis } from '@/components/JarvisContext'
 
 interface Props {
   cards: SuggestionCard[]
@@ -93,9 +93,15 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
     }
   }
 
-  if (finalizing) {
-    return <LoadingHUD message="Finalizing Profile" expectedDuration={60000} />
-  }
+  const { activate } = useJarvis()
+
+  useEffect(() => {
+    if (finalizing) {
+      activate('Finalizing Profile', { expectedDuration: 60000 })
+    }
+  }, [finalizing, activate])
+
+  if (finalizing) return null // Jarvis overlay handles the UI
 
   const statusBadge = (status: SuggestionCard['status']) => {
     if (status === 'approved') return <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs">Approved</Badge>
@@ -112,13 +118,13 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
         <div>
           <div className="flex justify-between items-center text-sm text-slate-400 mb-2">
             <span>{reviewed} of {total} reviewed</span>
-            <span className="text-indigo-300 font-medium">
+            <span className="text-cyan-300 font-medium">
               {current.label}
             </span>
           </div>
           <div className="h-1.5 rounded-full bg-slate-700 overflow-hidden">
             <div
-              className="h-full rounded-full bg-indigo-500 transition-all duration-500"
+              className="h-full rounded-full bg-cyan-500 transition-all duration-500"
               style={{ width: `${(reviewed / total) * 100}%` }}
             />
           </div>
@@ -135,7 +141,7 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
                 : c.status === 'skipped'
                 ? 'bg-slate-600'
                 : i === currentIndex
-                ? 'bg-indigo-500'
+                ? 'bg-cyan-500'
                 : 'bg-slate-700'
             return (
               <button
@@ -149,7 +155,7 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
         </div>
 
         {/* Suggestion card */}
-        <Card className="bg-slate-800/60 border-slate-700">
+        <Card className="bg-white/[0.04] backdrop-blur-sm border-white/[0.06]">
           <CardContent className="pt-6 pb-6 space-y-5">
 
             {/* Label + status */}
@@ -161,7 +167,7 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
             {/* Before */}
             <div>
               <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">Before</p>
-              <div className="rounded-lg border border-slate-600 bg-slate-900/60 p-4 text-sm text-slate-400 leading-relaxed line-through decoration-slate-600">
+              <div className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-4 text-sm text-slate-400 leading-relaxed line-through decoration-slate-600">
                 {current.current || <span className="no-underline italic">No existing content</span>}
               </div>
             </div>
@@ -203,7 +209,7 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
 
             {/* Reason */}
             {current.reason && (
-              <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-3">
+              <div className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-3">
                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Why this matters</p>
                 <p className="text-sm text-slate-300 leading-relaxed">{current.reason}</p>
               </div>
@@ -247,7 +253,7 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
             <p className="text-slate-400 text-sm">All cards reviewed. Ready to build your optimized profile.</p>
             <Button
               onClick={handleFinalize}
-              className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-base"
+              className="w-full h-12 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl text-base"
             >
               Finalize Profile →
             </Button>

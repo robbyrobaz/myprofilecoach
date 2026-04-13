@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import FeedbackFab from "@/components/FeedbackFab";
-import { AmbientBackground } from "@/components/AnalysisHUD";
+import { JarvisProvider } from "@/components/JarvisContext";
+import JarvisBackground from "@/components/JarvisBackground";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,10 +31,14 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#0a0a0f]">
-        <AmbientBackground />
-        {children}
-        <FeedbackFab />
+      <body className="min-h-full flex flex-col bg-[#050510] text-white">
+        <JarvisProvider>
+          <JarvisBackground />
+          <div className="relative" style={{ zIndex: 2 }}>
+            {children}
+          </div>
+          <FeedbackFab />
+        </JarvisProvider>
         <SpeedInsights />
       </body>
     </html>
