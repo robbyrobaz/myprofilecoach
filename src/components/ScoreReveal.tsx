@@ -143,7 +143,7 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
   const hiddenCount = Math.max(0, keywords.length - 3)
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 px-4 py-12">
+    <div className="min-h-screen text-slate-100 px-4 py-12 relative z-10">
       <div className="mx-auto max-w-2xl space-y-8">
 
         {/* Score hero */}
@@ -160,7 +160,7 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
         </div>
 
         {/* Breakdown */}
-        <Card className="bg-slate-800/60 border-slate-700">
+        <Card className="bg-slate-900/80 backdrop-blur-sm border-slate-700">
           <CardContent className="pt-6 pb-6 space-y-4">
             <h2 className="font-semibold text-slate-200 mb-4">Score Breakdown</h2>
             <ScoreBar label="Headline" value={score.breakdown.headline} max={20} />
@@ -172,7 +172,7 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
         </Card>
 
         {/* Top problems */}
-        <Card className="bg-slate-800/60 border-slate-700">
+        <Card className="bg-slate-900/80 backdrop-blur-sm border-slate-700">
           <CardContent className="pt-6 pb-6">
             <h2 className="font-semibold text-slate-200 mb-4">
               Critical Issues Found
@@ -210,7 +210,7 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
         </Card>
 
         {/* Keyword preview */}
-        <Card className="bg-slate-800/60 border-slate-700">
+        <Card className="bg-slate-900/80 backdrop-blur-sm border-slate-700">
           <CardContent className="pt-6 pb-6">
             <h2 className="font-semibold text-slate-200 mb-1">Keyword Gap Analysis</h2>
             <p className="text-slate-400 text-sm mb-4">
@@ -322,7 +322,7 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
             )}
           </div>
         ) : (
-          <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-indigo-900/30 to-slate-800/60 p-8 text-center space-y-4">
+          <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-indigo-900/30 to-slate-900/80 backdrop-blur-sm p-8 text-center space-y-4">
             <h3 className="text-xl font-bold text-slate-100">Fix your profile — fully</h3>
             <p className="text-slate-400 text-sm leading-relaxed">
               AI will interview you, surface your real achievements, and rewrite every section of your LinkedIn profile to rank in recruiter searches.

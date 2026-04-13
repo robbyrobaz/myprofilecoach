@@ -267,21 +267,21 @@ function ScoreCard() {
     { label: 'AI Signals', before: 30, after: 90 },
   ]
   return (
-    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-white/[0.02] backdrop-blur-sm p-6 shadow-2xl shadow-indigo-500/20">
+    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-white/[0.02] backdrop-blur-sm p-6 shadow-2xl shadow-cyan-500/20">
       <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-5">Your Profile Analysis</div>
       <div className="flex items-center justify-center gap-8 mb-6">
         <div className="text-center">
           <div className="text-6xl font-black text-slate-600 tabular-nums">38</div>
           <div className="text-xs text-slate-600 mt-1 font-medium">Before</div>
         </div>
-        <div className="text-indigo-400 text-2xl font-bold">→</div>
+        <div className="text-cyan-400 text-2xl font-bold">→</div>
         <div className="text-center">
-          <div className="text-6xl font-black text-indigo-400 tabular-nums">91</div>
-          <div className="text-xs text-indigo-400 mt-1 font-medium">After</div>
+          <div className="text-6xl font-black text-cyan-400 tabular-nums">91</div>
+          <div className="text-xs text-cyan-400 mt-1 font-medium">After</div>
         </div>
       </div>
       <div className="text-center mb-5">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/15 border border-indigo-500/25 px-4 py-1.5 text-indigo-300 font-semibold text-sm">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-500/15 border border-cyan-500/25 px-4 py-1.5 text-cyan-300 font-semibold text-sm">
           +53 points improvement
         </span>
       </div>
@@ -291,11 +291,11 @@ function ScoreCard() {
             <div className="w-20 text-xs text-slate-500">{b.label}</div>
             <div className="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
+                className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500"
                 style={{ width: `${b.after}%` }}
               />
             </div>
-            <div className="text-xs text-indigo-400 w-6 text-right font-medium">{b.after}</div>
+            <div className="text-xs text-cyan-400 w-6 text-right font-medium">{b.after}</div>
           </div>
         ))}
       </div>
@@ -311,7 +311,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white relative">
+    <div className="min-h-screen text-white relative">
 
       {/* NAV */}
       <Nav showHomeLinks />
@@ -320,19 +320,19 @@ export default function HomePage() {
       <section
         className="relative z-10 min-h-screen flex items-center pt-16"
         style={{
-          background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.25) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 80% 80%, rgba(139,92,246,0.1) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(6,182,212,0.15) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 80% 80%, rgba(34,211,238,0.06) 0%, transparent 60%)',
         }}
       >
         <div className="max-w-6xl mx-auto px-6 py-24 grid lg:grid-cols-2 gap-16 items-center w-full">
           {/* Left */}
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-medium text-indigo-300 mb-8">
-              <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-medium text-cyan-300 mb-8">
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
               Free profile score in 30 seconds
             </div>
             <h1 className="text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight mb-6">
               Recruiters use AI<br />to find candidates.<br />
-              <span style={{ background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 40%, #a78bfa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <span style={{ background: 'linear-gradient(135deg, #67e8f9 0%, #06b6d4 40%, #22d3ee 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 Use AI to be found.
               </span>
             </h1>
@@ -402,11 +402,11 @@ export default function HomePage() {
             ].map((item) => (
               <div
                 key={item.num}
-                className={`rounded-2xl p-7 ${item.highlight ? 'border border-indigo-500/20 bg-indigo-500/5' : 'border border-white/5 bg-white/[0.02]'}`}
+                className={`rounded-2xl p-7 ${item.highlight ? 'border border-cyan-500/20 bg-cyan-500/5' : 'border border-white/5 bg-white/[0.02]'}`}
               >
                 <div
                   className="text-4xl font-black mb-4"
-                  style={{ background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 40%, #a78bfa 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+                  style={{ background: 'linear-gradient(135deg, #67e8f9 0%, #06b6d4 40%, #22d3ee 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
                 >
                   {item.num}
                 </div>
@@ -429,7 +429,7 @@ export default function HomePage() {
               { score: '28 → 82', role: 'UX Designer', note: '"Finally showing up in LinkedIn searches."' },
             ].map((item) => (
               <div key={item.role} className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
-                <div className="text-3xl font-black text-indigo-400 mb-1">{item.score}</div>
+                <div className="text-3xl font-black text-cyan-400 mb-1">{item.score}</div>
                 <div className="text-xs text-slate-500 mb-3">{item.role}</div>
                 <p className="text-sm text-slate-300 italic">{item.note}</p>
               </div>
@@ -443,8 +443,8 @@ export default function HomePage() {
         <div className="max-w-md mx-auto text-center">
           <h2 className="text-3xl font-bold mb-3">One plan. Full access.</h2>
           <p className="text-slate-400 mb-12">Cancel any time. No hidden fees.</p>
-          <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-b from-indigo-900/20 to-transparent p-10">
-            <div className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3">Pro</div>
+          <div className="rounded-2xl border border-cyan-500/30 bg-gradient-to-b from-cyan-900/20 to-transparent p-10">
+            <div className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-3">Pro</div>
             <div className="flex items-end justify-center gap-1 mb-1">
               <span className="text-6xl font-black">$20</span>
               <span className="text-slate-400 mb-2 text-lg">/mo</span>
@@ -459,7 +459,7 @@ export default function HomePage() {
                 'PDF resume export',
               ].map((feat) => (
                 <li key={feat} className="flex gap-3">
-                  <span className="text-indigo-400 font-bold">✓</span>
+                  <span className="text-cyan-400 font-bold">✓</span>
                   {feat}
                 </li>
               ))}

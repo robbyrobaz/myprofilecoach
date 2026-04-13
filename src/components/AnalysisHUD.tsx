@@ -270,12 +270,12 @@ function NodeNetwork() {
 // --- Ambient background (muted 3D mesh behind all pages) ---
 export function AmbientBackground() {
   return (
-    <div className="fixed inset-0 opacity-25 pointer-events-none" style={{ zIndex: 0 }}>
+    <div className="fixed inset-0 opacity-15 pointer-events-none" style={{ zIndex: -1 }}>
       <Suspense fallback={null}>
         <Canvas
           camera={{ position: [0, 0, 10], fov: 55 }}
           gl={{ antialias: true, alpha: true }}
-          style={{ background: 'transparent' }}
+          style={{ background: 'transparent', pointerEvents: 'none' }}
         >
           <fog attach="fog" args={['#0a0a0f', 8, 18]} />
           <NodeNetwork />
