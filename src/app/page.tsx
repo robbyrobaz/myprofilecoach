@@ -141,7 +141,9 @@ function HeroForm() {
       const savedEmail = localStorage.getItem('mpc_email') ?? undefined
       let browserId = localStorage.getItem('mpc_browser_id')
       if (!browserId) {
-        browserId = crypto.randomUUID()
+        browserId = (typeof crypto.randomUUID === 'function')
+          ? crypto.randomUUID()
+          : Math.random().toString(36).slice(2) + Date.now().toString(36)
         localStorage.setItem('mpc_browser_id', browserId)
       }
       const res = await fetch('/api/score', {
