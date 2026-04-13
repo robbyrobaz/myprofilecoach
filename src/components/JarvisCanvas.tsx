@@ -30,7 +30,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
   const particlesRef = useRef<THREE.Points>(null)
 
   const lerpedMouse = useRef({ x: 0, y: 0 })
-  const lerpedIntensity = useRef(0.15)
+  const lerpedIntensity = useRef(0.08)
 
   const nodeData = useMemo(() => {
     const positions: THREE.Vector3[] = []
@@ -119,7 +119,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
         dummy.updateMatrix()
         nodesRef.current.setMatrixAt(i, dummy.matrix)
 
-        const brightness = 0.2 + I * 0.55
+        const brightness = 0.12 + I * 0.63
         color.setHSL(0.52 + Math.sin(t * 1.5 + i) * 0.04, 0.7, brightness + pulse * 0.12)
         nodesRef.current.setColorAt(i, color)
       }
@@ -144,7 +144,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
           Math.sin(t * waveSpeed * 0.7 + e * 0.3 + 1.5) * 0.5 + 0.5,
         )
         const base = Math.max(0, 1 - a.distanceTo(b) / EDGE_DIST)
-        const brightness = base * (0.06 + I * 0.55 + pulse * (0.1 + I * 0.35))
+        const brightness = base * (0.03 + I * 0.58 + pulse * (0.05 + I * 0.4))
         const boost = (i < 30 || j < 30) ? 1.5 : 1.0
         const shift = Math.sin(t * waveSpeed * 1.2 + e * 0.7) * 0.5 + 0.5
 
@@ -202,7 +202,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[particlePositions, 3]} count={PARTICLE_COUNT} />
         </bufferGeometry>
-        <pointsMaterial size={0.03} color="#67e8f9" transparent opacity={0.5} blending={THREE.AdditiveBlending} sizeAttenuation />
+        <pointsMaterial size={0.03} color="#67e8f9" transparent opacity={0.3} blending={THREE.AdditiveBlending} sizeAttenuation />
       </points>
     </group>
   )
@@ -213,7 +213,7 @@ export default function JarvisCanvas({ mode }: { mode: 'ambient' | 'active' }) {
   const intensityRef = useRef(0.25)
 
   useEffect(() => {
-    intensityRef.current = mode === 'active' ? 1.0 : 0.15
+    intensityRef.current = mode === 'active' ? 1.0 : 0.08
   }, [mode])
 
   return (
