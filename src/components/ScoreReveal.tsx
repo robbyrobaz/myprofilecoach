@@ -170,7 +170,7 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
         </div>
 
         {/* Breakdown */}
-        <Card className="bg-white/[0.04] backdrop-blur-sm border-white/[0.06]">
+        <Card className="bg-slate-900/70 backdrop-blur-md border-white/[0.06]">
           <CardContent className="pt-6 pb-6 space-y-4">
             <h2 className="font-semibold text-slate-200 mb-4">Score Breakdown</h2>
             <ScoreBar label="Headline" value={score.breakdown.headline} max={20} />
@@ -182,7 +182,7 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
         </Card>
 
         {/* Top problems */}
-        <Card className="bg-white/[0.04] backdrop-blur-sm border-white/[0.06]">
+        <Card className="bg-slate-900/70 backdrop-blur-md border-white/[0.06]">
           <CardContent className="pt-6 pb-6">
             <h2 className="font-semibold text-slate-200 mb-4">
               Critical Issues Found
@@ -220,7 +220,7 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
         </Card>
 
         {/* Keyword preview */}
-        <Card className="bg-white/[0.04] backdrop-blur-sm border-white/[0.06]">
+        <Card className="bg-slate-900/70 backdrop-blur-md border-white/[0.06]">
           <CardContent className="pt-6 pb-6">
             <h2 className="font-semibold text-slate-200 mb-1">Keyword Gap Analysis</h2>
             <p className="text-slate-400 text-sm mb-4">
@@ -304,7 +304,7 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
             </Button>
           </div>
         ) : (
-          <div className="rounded-2xl border border-cyan-500/30 bg-white/[0.04] backdrop-blur-sm p-8 text-center space-y-4">
+          <div className="rounded-2xl border border-cyan-500/30 bg-slate-900/70 backdrop-blur-md p-8 text-center space-y-4">
             <h3 className="text-xl font-bold text-slate-100">Fix your profile — fully</h3>
             <p className="text-slate-400 text-sm leading-relaxed">
               AI will interview you, surface your real achievements, and rewrite every section of your LinkedIn profile to rank in recruiter searches.

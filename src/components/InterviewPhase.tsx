@@ -105,7 +105,7 @@ export default function InterviewPhase({ questions, sessionId }: Props) {
         </div>
 
         {/* Question card */}
-        <Card className="bg-white/[0.04] backdrop-blur-sm border-white/[0.06]">
+        <Card className="bg-slate-900/70 backdrop-blur-md border-white/[0.06]">
           <CardContent className="pt-8 pb-8 space-y-6">
             {/* Context */}
             <div className="flex items-center gap-2">
@@ -161,7 +161,7 @@ export default function InterviewPhase({ questions, sessionId }: Props) {
 
         {/* Answered summary */}
         {Object.keys(answers).length > 0 && (
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.04] backdrop-blur-sm p-4">
+          <div className="rounded-xl border border-white/[0.06] bg-slate-900/70 backdrop-blur-md p-4">
             <p className="text-xs text-slate-400 mb-2 uppercase tracking-wider">Answered so far</p>
             <div className="space-y-1">
               {Object.entries(answers).map(([idx, ans]) => (

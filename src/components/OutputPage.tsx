@@ -129,7 +129,7 @@ export default function OutputPage({ output, sessionId }: Props) {
     <div className="min-h-screen text-slate-100 relative z-10">
 
       {/* Hero */}
-      <div className="relative overflow-hidden bg-white/[0.03] border-b border-white/[0.06] px-4 py-14 text-center">
+      <div className="relative overflow-hidden bg-slate-900/50 border-b border-white/[0.06] px-4 py-14 text-center">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/10 via-transparent to-cyan-900/10 pointer-events-none" />
         <div className="relative">
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-sm font-medium text-emerald-300 mb-8">
@@ -180,8 +180,8 @@ export default function OutputPage({ output, sessionId }: Props) {
             </div>
 
             {/* Headline */}
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.03]">
+            <div className="rounded-2xl border border-white/[0.06] bg-slate-900/60 backdrop-blur-md overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06] bg-slate-900/50">
                 <div className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Headline</span>
@@ -194,8 +194,8 @@ export default function OutputPage({ output, sessionId }: Props) {
             </div>
 
             {/* About */}
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.03]">
+            <div className="rounded-2xl border border-white/[0.06] bg-slate-900/60 backdrop-blur-md overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06] bg-slate-900/50">
                 <div className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">About / Summary</span>
@@ -209,8 +209,8 @@ export default function OutputPage({ output, sessionId }: Props) {
 
             {/* Experience roles */}
             {output.roles.map((role, i) => (
-              <div key={i} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.03]">
+              <div key={i} className="rounded-2xl border border-white/[0.06] bg-slate-900/60 backdrop-blur-md overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06] bg-slate-900/50">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <div className="h-1.5 w-1.5 rounded-full bg-violet-400 flex-shrink-0" />
@@ -236,7 +236,7 @@ export default function OutputPage({ output, sessionId }: Props) {
 
           {/* Resume PDF tab */}
           <TabsContent value="resume" className="pt-5">
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-10 text-center space-y-5">
+            <div className="rounded-2xl border border-white/[0.06] bg-slate-900/60 backdrop-blur-md p-10 text-center space-y-5">
               <div className="text-5xl">📄</div>
               <div>
                 <h3 className="font-semibold text-slate-200 text-lg mb-2">ATS-Friendly PDF Resume</h3>
@@ -279,19 +279,19 @@ export default function OutputPage({ output, sessionId }: Props) {
         </Tabs>
 
         {/* Share */}
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.04] backdrop-blur-sm p-6 space-y-4">
+        <div className="rounded-2xl border border-white/[0.06] bg-slate-900/70 backdrop-blur-md p-6 space-y-4">
           <div>
             <h3 className="font-semibold text-slate-200 mb-0.5">Share your win</h3>
             <p className="text-xs text-slate-500">Great for LinkedIn posts, Twitter/X, or TikTok</p>
           </div>
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 text-sm text-slate-300 leading-relaxed italic">
+          <div className="rounded-xl border border-white/[0.06] bg-slate-900/50 p-4 text-sm text-slate-300 leading-relaxed italic">
             &ldquo;{shareText}&rdquo;
           </div>
           <CopyButton text={shareText} label="Copy for social" size="md" />
         </div>
 
         {/* Next steps */}
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.04] backdrop-blur-sm p-6">
+        <div className="rounded-2xl border border-white/[0.06] bg-slate-900/70 backdrop-blur-md p-6">
           <h3 className="font-semibold text-slate-200 mb-4">What to do next</h3>
           <ol className="space-y-3">
             {[

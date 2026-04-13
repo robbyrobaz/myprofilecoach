@@ -155,7 +155,7 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
         </div>
 
         {/* Suggestion card */}
-        <Card className="bg-white/[0.04] backdrop-blur-sm border-white/[0.06]">
+        <Card className="bg-slate-900/70 backdrop-blur-md border-white/[0.06]">
           <CardContent className="pt-6 pb-6 space-y-5">
 
             {/* Label + status */}
@@ -167,7 +167,7 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
             {/* Before */}
             <div>
               <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">Before</p>
-              <div className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-4 text-sm text-slate-400 leading-relaxed line-through decoration-slate-600">
+              <div className="rounded-lg border border-white/[0.06] bg-slate-900/50 p-4 text-sm text-slate-400 leading-relaxed line-through decoration-slate-600">
                 {current.current || <span className="no-underline italic">No existing content</span>}
               </div>
             </div>
@@ -209,7 +209,7 @@ export default function SuggestionReview({ cards: initialCards, sessionId }: Pro
 
             {/* Reason */}
             {current.reason && (
-              <div className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-3">
+              <div className="rounded-lg border border-white/[0.06] bg-slate-900/50 p-3">
                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Why this matters</p>
                 <p className="text-sm text-slate-300 leading-relaxed">{current.reason}</p>
               </div>

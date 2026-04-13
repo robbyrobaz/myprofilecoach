@@ -4,9 +4,9 @@ import { useEffect, useRef, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
-const COUNT = 50
-const PARTICLE_COUNT = 150
-const EDGE_DIST = 2.8
+const COUNT = 80
+const PARTICLE_COUNT = 250
+const EDGE_DIST = 3.2
 
 function MouseTracker({ mouseRef }: { mouseRef: React.RefObject<{ x: number; y: number }> }) {
   useEffect(() => {
@@ -30,7 +30,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
   const particlesRef = useRef<THREE.Points>(null)
 
   const lerpedMouse = useRef({ x: 0, y: 0 })
-  const lerpedIntensity = useRef(0.25)
+  const lerpedIntensity = useRef(0.15)
 
   const nodeData = useMemo(() => {
     const positions: THREE.Vector3[] = []
@@ -119,7 +119,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
         dummy.updateMatrix()
         nodesRef.current.setMatrixAt(i, dummy.matrix)
 
-        const brightness = 0.3 + I * 0.45
+        const brightness = 0.2 + I * 0.55
         color.setHSL(0.52 + Math.sin(t * 1.5 + i) * 0.04, 0.7, brightness + pulse * 0.12)
         nodesRef.current.setColorAt(i, color)
       }
@@ -144,18 +144,19 @@ function NodeNetwork({ mouseRef, intensityRef }: {
           Math.sin(t * waveSpeed * 0.7 + e * 0.3 + 1.5) * 0.5 + 0.5,
         )
         const base = Math.max(0, 1 - a.distanceTo(b) / EDGE_DIST)
-        const brightness = base * (0.12 + I * 0.5 + pulse * (0.2 + I * 0.3))
+        const brightness = base * (0.06 + I * 0.55 + pulse * (0.1 + I * 0.35))
+        const boost = (i < 30 || j < 30) ? 1.5 : 1.0
         const shift = Math.sin(t * waveSpeed * 1.2 + e * 0.7) * 0.5 + 0.5
 
         colorAttr.setXYZ(e * 2,
-          (0.1 + shift * 0.15) * brightness,
-          (0.55 + shift * 0.2) * brightness,
-          brightness,
+          (0.1 + shift * 0.15) * brightness * boost,
+          (0.55 + shift * 0.2) * brightness * boost,
+          brightness * boost,
         )
         colorAttr.setXYZ(e * 2 + 1,
-          (0.15 + (1 - shift) * 0.1) * brightness,
-          (0.65 + (1 - shift) * 0.15) * brightness,
-          brightness * 0.9,
+          (0.15 + (1 - shift) * 0.1) * brightness * boost,
+          (0.65 + (1 - shift) * 0.15) * brightness * boost,
+          brightness * 0.9 * boost,
         )
       }
       posAttr.needsUpdate = true
@@ -193,7 +194,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
       </lineSegments>
 
       <instancedMesh ref={nodesRef} args={[undefined, undefined, COUNT]}>
-        <sphereGeometry args={[1, 8, 8]} />
+        <sphereGeometry args={[1, 12, 12]} />
         <meshBasicMaterial transparent opacity={0.9} blending={THREE.AdditiveBlending} />
       </instancedMesh>
 
@@ -212,7 +213,7 @@ export default function JarvisCanvas({ mode }: { mode: 'ambient' | 'active' }) {
   const intensityRef = useRef(0.25)
 
   useEffect(() => {
-    intensityRef.current = mode === 'active' ? 1.0 : 0.25
+    intensityRef.current = mode === 'active' ? 1.0 : 0.15
   }, [mode])
 
   return (
