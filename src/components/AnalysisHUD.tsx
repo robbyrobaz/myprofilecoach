@@ -1,7 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useEffect, useRef, useState, useMemo, Suspense } from 'react'
+import { Canvas, useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
 
+// --- Phase labels ---
 const PHASES = [
   'Initializing Neural Parser',
   'Extracting Career Topology',
@@ -11,284 +14,346 @@ const PHASES = [
   'Cross-Referencing Industry Patterns',
   'Computing AI Visibility Index',
   'Evaluating Impact Vectors',
-  'Building Score Model',
-  'Finalizing Intelligence Report',
+  'Calibrating Score Model',
+  'Synthesizing Intelligence Report',
 ]
 
-const NODE_LABELS = [
-  'Headline', 'Experience', 'Skills', 'Keywords', 'AI Signals',
-  'Education', 'Impact', 'Role Match', 'Recruiter Index', 'Semantic Map',
-  'Career Arc', 'Industry Fit', 'Leadership', 'Tech Depth', 'Network',
-  'Growth', 'Revenue', 'Strategy', 'Credentials', 'Visibility',
-]
+// --- 3D Node Mesh (glowing spheres connected by stretching lines) ---
+function NodeNetwork() {
+  const groupRef = useRef<THREE.Group>(null)
+  const linesRef = useRef<THREE.LineSegments>(null)
+  const nodesRef = useRef<THREE.InstancedMesh>(null)
+  const particlesRef = useRef<THREE.Points>(null)
 
-interface Particle { x: number; y: number; vx: number; vy: number; life: number; maxLife: number }
+  const COUNT = 60
+  const PARTICLE_COUNT = 200
 
+  // Generate node positions
+  const nodeData = useMemo(() => {
+    const positions: THREE.Vector3[] = []
+    for (let i = 0; i < COUNT; i++) {
+      const phi = Math.acos(2 * Math.random() - 1)
+      const theta = Math.random() * Math.PI * 2
+      const r = 2.5 + Math.random() * 1.5
+      positions.push(new THREE.Vector3(
+        r * Math.sin(phi) * Math.cos(theta),
+        r * Math.sin(phi) * Math.sin(theta),
+        r * Math.cos(phi),
+      ))
+    }
+    return positions
+  }, [])
+
+  // Velocity for each node
+  const velocities = useMemo(() =>
+    nodeData.map(() => new THREE.Vector3(
+      (Math.random() - 0.5) * 0.003,
+      (Math.random() - 0.5) * 0.003,
+      (Math.random() - 0.5) * 0.003,
+    )), [nodeData])
+
+  // Particle positions
+  const particlePositions = useMemo(() => {
+    const arr = new Float32Array(PARTICLE_COUNT * 3)
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const phi = Math.acos(2 * Math.random() - 1)
+      const theta = Math.random() * Math.PI * 2
+      const r = 1 + Math.random() * 5
+      arr[i * 3] = r * Math.sin(phi) * Math.cos(theta)
+      arr[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
+      arr[i * 3 + 2] = r * Math.cos(phi)
+    }
+    return arr
+  }, [])
+
+  // Build edge pairs (connect nearby nodes)
+  const edgePairs = useMemo(() => {
+    const pairs: [number, number][] = []
+    for (let i = 0; i < COUNT; i++) {
+      for (let j = i + 1; j < COUNT; j++) {
+        if (nodeData[i].distanceTo(nodeData[j]) < 2.8) {
+          pairs.push([i, j])
+        }
+      }
+    }
+    return pairs
+  }, [nodeData])
+
+  const dummy = useMemo(() => new THREE.Object3D(), [])
+
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime()
+
+    // Rotate the whole group slowly
+    if (groupRef.current) {
+      groupRef.current.rotation.y = t * 0.08
+      groupRef.current.rotation.x = Math.sin(t * 0.05) * 0.1
+    }
+
+    // Move nodes
+    for (let i = 0; i < COUNT; i++) {
+      const p = nodeData[i]
+      const v = velocities[i]
+      p.add(v)
+      // Soft boundary
+      const dist = p.length()
+      if (dist > 4.5) {
+        v.multiplyScalar(-1)
+        p.normalize().multiplyScalar(4.4)
+      }
+      if (dist < 1) {
+        v.multiplyScalar(-1)
+        p.normalize().multiplyScalar(1.1)
+      }
+    }
+
+    // Update instanced mesh (nodes)
+    if (nodesRef.current) {
+      for (let i = 0; i < COUNT; i++) {
+        const pulse = 0.8 + Math.sin(t * 3 + i * 0.7) * 0.4
+        const scale = 0.04 + pulse * 0.02
+        dummy.position.copy(nodeData[i])
+        dummy.scale.setScalar(scale)
+        dummy.updateMatrix()
+        nodesRef.current.setMatrixAt(i, dummy.matrix)
+
+        // Color — pulse between cyan and blue
+        const color = new THREE.Color()
+        color.setHSL(0.55 + Math.sin(t * 2 + i) * 0.05, 0.9, 0.5 + pulse * 0.2)
+        nodesRef.current.setColorAt(i, color)
+      }
+      nodesRef.current.instanceMatrix.needsUpdate = true
+      if (nodesRef.current.instanceColor) nodesRef.current.instanceColor.needsUpdate = true
+    }
+
+    // Update line positions (stretching between moving nodes)
+    if (linesRef.current) {
+      const posAttr = linesRef.current.geometry.getAttribute('position') as THREE.BufferAttribute
+      const colorAttr = linesRef.current.geometry.getAttribute('color') as THREE.BufferAttribute
+
+      for (let e = 0; e < edgePairs.length; e++) {
+        const [i, j] = edgePairs[e]
+        const a = nodeData[i], b = nodeData[j]
+        posAttr.setXYZ(e * 2, a.x, a.y, a.z)
+        posAttr.setXYZ(e * 2 + 1, b.x, b.y, b.z)
+
+        // Animate color — energy pulse along edges
+        const pulse = Math.sin(t * 4 + e * 0.3) * 0.5 + 0.5
+        const dist = a.distanceTo(b)
+        const brightness = Math.max(0, 1 - dist / 2.8) * (0.15 + pulse * 0.25)
+        colorAttr.setXYZ(e * 2, 0.2 * brightness, 0.7 * brightness, brightness)
+        colorAttr.setXYZ(e * 2 + 1, 0.3 * brightness, 0.6 * brightness, brightness * 0.8)
+      }
+      posAttr.needsUpdate = true
+      colorAttr.needsUpdate = true
+    }
+
+    // Animate particles
+    if (particlesRef.current) {
+      const posAttr = particlesRef.current.geometry.getAttribute('position') as THREE.BufferAttribute
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const x = posAttr.getX(i)
+        const y = posAttr.getY(i)
+        const z = posAttr.getZ(i)
+        // Gentle orbit
+        const angle = 0.002
+        const cos = Math.cos(angle), sin = Math.sin(angle)
+        posAttr.setXYZ(i,
+          x * cos - z * sin,
+          y + Math.sin(t * 0.5 + i) * 0.002,
+          x * sin + z * cos,
+        )
+      }
+      posAttr.needsUpdate = true
+    }
+  })
+
+  const linePositions = useMemo(() => new Float32Array(edgePairs.length * 6), [edgePairs])
+  const lineColors = useMemo(() => new Float32Array(edgePairs.length * 6), [edgePairs])
+
+  return (
+    <group ref={groupRef}>
+      {/* Edges — stretching lines */}
+      <lineSegments ref={linesRef}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[linePositions, 3]} count={edgePairs.length * 2} />
+          <bufferAttribute attach="attributes-color" args={[lineColors, 3]} count={edgePairs.length * 2} />
+        </bufferGeometry>
+        <lineBasicMaterial vertexColors transparent opacity={0.8} blending={THREE.AdditiveBlending} />
+      </lineSegments>
+
+      {/* Nodes — instanced spheres */}
+      <instancedMesh ref={nodesRef} args={[undefined, undefined, COUNT]}>
+        <sphereGeometry args={[1, 12, 12]} />
+        <meshBasicMaterial transparent opacity={0.9} blending={THREE.AdditiveBlending} />
+      </instancedMesh>
+
+      {/* Floating particles */}
+      <points ref={particlesRef}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[particlePositions, 3]} count={PARTICLE_COUNT} />
+        </bufferGeometry>
+        <pointsMaterial size={0.03} color="#4fc3f7" transparent opacity={0.4} blending={THREE.AdditiveBlending} sizeAttenuation />
+      </points>
+
+      {/* Central glow core */}
+      <mesh>
+        <sphereGeometry args={[0.4, 32, 32]} />
+        <meshBasicMaterial color="#6366f1" transparent opacity={0.15} blending={THREE.AdditiveBlending} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[0.2, 32, 32]} />
+        <meshBasicMaterial color="#818cf8" transparent opacity={0.4} blending={THREE.AdditiveBlending} />
+      </mesh>
+
+      {/* Scanning ring */}
+      <ScanRing />
+    </group>
+  )
+}
+
+function ScanRing() {
+  const ref = useRef<THREE.Mesh>(null)
+  useFrame(({ clock }) => {
+    if (!ref.current) return
+    const t = clock.getElapsedTime()
+    ref.current.rotation.x = t * 0.5
+    ref.current.rotation.z = t * 0.3
+    const scale = 1.8 + Math.sin(t * 2) * 0.3
+    ref.current.scale.setScalar(scale)
+  })
+  return (
+    <mesh ref={ref}>
+      <torusGeometry args={[1, 0.008, 16, 100]} />
+      <meshBasicMaterial color="#4fc3f7" transparent opacity={0.3} blending={THREE.AdditiveBlending} />
+    </mesh>
+  )
+}
+
+// --- Ambient background (muted 3D mesh behind homepage content) ---
+export function AmbientBackground() {
+  return (
+    <div className="absolute inset-0 opacity-30 pointer-events-none">
+      <Suspense fallback={null}>
+        <Canvas
+          camera={{ position: [0, 0, 10], fov: 55 }}
+          gl={{ antialias: true, alpha: true }}
+          style={{ background: 'transparent' }}
+        >
+          <fog attach="fog" args={['#0a0a0f', 8, 18]} />
+          <NodeNetwork />
+        </Canvas>
+      </Suspense>
+    </div>
+  )
+}
+
+// --- Main HUD Component (active full-screen mode) ---
 export default function AnalysisHUD({ targetRole }: { targetRole: string }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const frameRef = useRef(0)
-  const tRef = useRef(0)
   const [phase, setPhase] = useState(0)
   const [progress, setProgress] = useState(0)
   const [stats, setStats] = useState({ nodes: 0, edges: 0, patterns: 0 })
 
-  // Nodes state stored in ref for canvas perf
-  const nodesRef = useRef(NODE_LABELS.map((label, i) => {
-    const angle = (i / NODE_LABELS.length) * Math.PI * 2
-    const r = 0.25 + Math.random() * 0.15
-    return {
-      x: 0.5 + Math.cos(angle) * r,
-      y: 0.5 + Math.sin(angle) * r,
-      vx: (Math.random() - 0.5) * 0.0004,
-      vy: (Math.random() - 0.5) * 0.0004,
-      radius: 2.5 + Math.random() * 2,
-      label,
-      active: false,
-      activeTimer: 0,
-    }
-  }))
-
-  const edgesRef = useRef<{ a: number; b: number; glow: number }[]>([])
-  const particlesRef = useRef<Particle[]>([])
-
-  // Build edges
-  useEffect(() => {
-    const nodes = nodesRef.current
-    const edges: { a: number; b: number; glow: number }[] = []
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        const dx = nodes[i].x - nodes[j].x
-        const dy = nodes[i].y - nodes[j].y
-        if (Math.sqrt(dx * dx + dy * dy) < 0.3) {
-          edges.push({ a: i, b: j, glow: 0 })
-        }
-      }
-    }
-    edgesRef.current = edges
-  }, [])
-
-  // Phase & stats progression
   useEffect(() => {
     let elapsed = 0
+    // Total expected duration ~120s (matches the Vercel timeout)
+    const totalExpected = 120000
     const interval = setInterval(() => {
-      elapsed += 60
-      const phaseDur = 3200
-      const p = Math.min(Math.floor(elapsed / phaseDur), PHASES.length - 1)
-      setPhase(p)
-      setProgress(Math.min((elapsed / (PHASES.length * phaseDur)) * 96, 96))
-      setStats({
-        nodes: Math.min(Math.floor(elapsed / 60), 1247),
-        edges: Math.min(Math.floor(elapsed / 35), 3891),
-        patterns: Math.min(Math.floor(elapsed / 250), 284),
-      })
+      elapsed += 80
+      // Ease-out progress — slows down but never fully stalls
+      const raw = elapsed / totalExpected
+      const eased = 1 - Math.pow(1 - Math.min(raw, 1), 2.5)
+      setProgress(eased * 99)
 
-      // Randomly activate nodes
-      const nodes = nodesRef.current
-      if (Math.random() < 0.15) {
-        const idx = Math.floor(Math.random() * nodes.length)
-        nodes[idx].active = true
-        nodes[idx].activeTimer = 60
-      }
-      // Randomly glow edges
-      const edges = edgesRef.current
-      if (Math.random() < 0.12 && edges.length > 0) {
-        const idx = Math.floor(Math.random() * edges.length)
-        edges[idx].glow = 1
-      }
-      // Spawn particles along a random active edge
-      if (Math.random() < 0.2 && edges.length > 0) {
-        const e = edges[Math.floor(Math.random() * edges.length)]
-        const a = nodes[e.a], b = nodes[e.b]
-        particlesRef.current.push({
-          x: a.x, y: a.y,
-          vx: (b.x - a.x) * 0.015,
-          vy: (b.y - a.y) * 0.015,
-          life: 0, maxLife: 70,
-        })
-      }
-    }, 60)
+      // Phase cycling
+      const phaseDur = totalExpected / PHASES.length
+      setPhase(Math.min(Math.floor(elapsed / phaseDur), PHASES.length - 1))
+
+      // Stats
+      setStats({
+        nodes: Math.min(Math.floor(elapsed / 50), 1847),
+        edges: Math.min(Math.floor(elapsed / 28), 5291),
+        patterns: Math.min(Math.floor(elapsed / 180), 412),
+      })
+    }, 80)
     return () => clearInterval(interval)
   }, [])
 
-  const draw = useCallback(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    const dpr = window.devicePixelRatio || 1
-    const rect = canvas.getBoundingClientRect()
-    canvas.width = rect.width * dpr
-    canvas.height = rect.height * dpr
-    ctx.scale(dpr, dpr)
-    const W = rect.width, H = rect.height
-    ctx.clearRect(0, 0, W, H)
-    tRef.current += 0.016
-
-    const t = tRef.current
-    const nodes = nodesRef.current
-    const edges = edgesRef.current
-    const particles = particlesRef.current
-
-    // Move nodes gently
-    for (const n of nodes) {
-      n.x += n.vx + Math.sin(t * 0.7 + n.x * 10) * 0.00008
-      n.y += n.vy + Math.cos(t * 0.6 + n.y * 10) * 0.00008
-      if (n.x < 0.08 || n.x > 0.92) n.vx *= -1
-      if (n.y < 0.08 || n.y > 0.92) n.vy *= -1
-      if (n.activeTimer > 0) n.activeTimer--
-      if (n.activeTimer <= 0) n.active = false
-    }
-
-    // Draw edges
-    for (const e of edges) {
-      const a = nodes[e.a], b = nodes[e.b]
-      const ax = a.x * W, ay = a.y * H, bx = b.x * W, by = b.y * H
-      e.glow = Math.max(0, e.glow - 0.012)
-
-      ctx.beginPath()
-      ctx.moveTo(ax, ay)
-      ctx.lineTo(bx, by)
-      if (e.glow > 0) {
-        ctx.strokeStyle = `rgba(129, 140, 248, ${0.15 + e.glow * 0.6})`
-        ctx.lineWidth = 0.8 + e.glow * 1.5
-      } else {
-        ctx.strokeStyle = 'rgba(99, 102, 241, 0.06)'
-        ctx.lineWidth = 0.5
-      }
-      ctx.stroke()
-    }
-
-    // Draw particles
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i]
-      p.x += p.vx
-      p.y += p.vy
-      p.life++
-      if (p.life > p.maxLife) { particles.splice(i, 1); continue }
-      const alpha = 1 - p.life / p.maxLife
-      ctx.beginPath()
-      ctx.arc(p.x * W, p.y * H, 2, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(167, 139, 250, ${alpha * 0.8})`
-      ctx.fill()
-    }
-
-    // Draw nodes
-    for (const n of nodes) {
-      const nx = n.x * W, ny = n.y * H
-      const pulse = Math.sin(t * 2 + nx * 0.01) * 0.5 + 0.5
-
-      if (n.active) {
-        // Outer ring pulse
-        const ringR = n.radius * 5 + Math.sin(t * 4) * 3
-        ctx.beginPath()
-        ctx.arc(nx, ny, ringR, 0, Math.PI * 2)
-        ctx.strokeStyle = `rgba(129, 140, 248, ${0.3 * (n.activeTimer / 60)})`
-        ctx.lineWidth = 1
-        ctx.stroke()
-
-        // Glow
-        const glow = ctx.createRadialGradient(nx, ny, 0, nx, ny, n.radius * 8)
-        glow.addColorStop(0, `rgba(129, 140, 248, ${0.25 * (n.activeTimer / 60)})`)
-        glow.addColorStop(1, 'rgba(129, 140, 248, 0)')
-        ctx.beginPath()
-        ctx.arc(nx, ny, n.radius * 8, 0, Math.PI * 2)
-        ctx.fillStyle = glow
-        ctx.fill()
-      }
-
-      // Dot
-      const r = n.active ? n.radius * 1.6 : n.radius * (0.7 + pulse * 0.3)
-      const alpha = n.active ? 0.9 : 0.15 + pulse * 0.1
-      ctx.beginPath()
-      ctx.arc(nx, ny, r, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(129, 140, 248, ${alpha})`
-      ctx.fill()
-
-      // Label — always show for active, dim for others
-      const labelAlpha = n.active ? 0.95 : 0.12 + pulse * 0.08
-      ctx.font = `${n.active ? '11' : '9'}px system-ui, -apple-system, sans-serif`
-      ctx.fillStyle = `rgba(203, 213, 225, ${labelAlpha})`
-      ctx.textAlign = 'center'
-      ctx.fillText(n.label, nx, ny - n.radius * 2.5 - 4)
-    }
-
-    // Horizontal scan line
-    const scanY = (t * 25) % H
-    const sg = ctx.createLinearGradient(0, scanY - 1, 0, scanY + 1)
-    sg.addColorStop(0, 'rgba(99, 102, 241, 0)')
-    sg.addColorStop(0.5, 'rgba(99, 102, 241, 0.04)')
-    sg.addColorStop(1, 'rgba(99, 102, 241, 0)')
-    ctx.fillStyle = sg
-    ctx.fillRect(0, scanY - 40, W, 80)
-
-    frameRef.current = requestAnimationFrame(draw)
-  }, [])
-
-  useEffect(() => {
-    frameRef.current = requestAnimationFrame(draw)
-    return () => cancelAnimationFrame(frameRef.current)
-  }, [draw])
-
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col relative overflow-hidden">
-      {/* Full-screen canvas */}
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+    <div className="min-h-screen bg-[#020617] flex flex-col relative overflow-hidden">
+      {/* 3D Canvas — full screen background */}
+      <div className="absolute inset-0">
+        <Suspense fallback={null}>
+          <Canvas
+            camera={{ position: [0, 0, 8], fov: 55 }}
+            gl={{ antialias: true, alpha: true }}
+            style={{ background: '#020617' }}
+          >
+            <fog attach="fog" args={['#020617', 6, 16]} />
+            <NodeNetwork />
+          </Canvas>
+        </Suspense>
+      </div>
 
       {/* Vignette */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(2,6,23,0.85)_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_25%,rgba(2,6,23,0.9)_100%)] pointer-events-none" />
 
-      {/* Top edge line */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent" />
-
-      {/* Content overlay */}
-      <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-4">
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-4 pointer-events-none">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-xs text-indigo-300 mb-6">
-          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-xs text-cyan-300 mb-6 backdrop-blur-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
           PROFILE INTELLIGENCE ENGINE
         </div>
 
         {/* Title */}
-        <h1 className="text-3xl sm:text-4xl font-bold text-white text-center mb-2">
-          Analyzing for{' '}
-          <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
-            {targetRole}
-          </span>
+        <h1 className="text-3xl sm:text-5xl font-bold text-white text-center mb-2 drop-shadow-[0_0_30px_rgba(99,102,241,0.3)]">
+          Analyzing Profile
         </h1>
+        <p className="text-base sm:text-lg text-indigo-300/80 text-center mb-2">
+          {targetRole}
+        </p>
 
-        {/* Current phase */}
-        <p className="text-sm text-slate-400 mt-3 mb-10 h-5 transition-opacity duration-500">
+        {/* Phase */}
+        <p className="text-sm text-cyan-400/60 mt-3 mb-10 h-5 font-mono tracking-wider">
           {PHASES[phase]}
         </p>
 
-        {/* Stats row */}
-        <div className="flex gap-8 sm:gap-12 mb-10">
+        {/* Stats */}
+        <div className="flex gap-8 sm:gap-14 mb-10">
           {[
             { label: 'Nodes Scanned', value: stats.nodes.toLocaleString() },
             { label: 'Edges Traced', value: stats.edges.toLocaleString() },
             { label: 'Patterns Found', value: stats.patterns.toLocaleString() },
           ].map((s) => (
             <div key={s.label} className="text-center">
-              <p className="text-2xl sm:text-3xl font-mono font-bold text-indigo-400 tabular-nums">{s.value}</p>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 mt-1">{s.label}</p>
+              <p className="text-2xl sm:text-3xl font-mono font-bold text-cyan-400 tabular-nums drop-shadow-[0_0_10px_rgba(34,211,238,0.4)]">
+                {s.value}
+              </p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 mt-1">{s.label}</p>
             </div>
           ))}
         </div>
 
         {/* Progress bar */}
-        <div className="w-full max-w-md">
-          <div className="h-1 rounded-full bg-slate-800/80 overflow-hidden">
+        <div className="w-full max-w-sm">
+          <div className="h-[3px] rounded-full bg-slate-800/80 overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-indigo-600 via-violet-500 to-purple-500 transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
+              className="h-full rounded-full transition-all duration-500 ease-out"
+              style={{
+                width: `${progress}%`,
+                background: 'linear-gradient(90deg, #06b6d4, #6366f1, #a78bfa)',
+                boxShadow: '0 0 12px rgba(99, 102, 241, 0.6)',
+              }}
             />
           </div>
           <p className="text-xs text-slate-600 text-center mt-2 font-mono tabular-nums">{Math.round(progress)}%</p>
         </div>
       </div>
 
-      {/* Bottom edge line */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent" />
+      {/* Edge lines */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
     </div>
   )
 }

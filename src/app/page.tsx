@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import Nav from '@/components/Nav'
-import AnalysisHUD from '@/components/AnalysisHUD'
+import AnalysisHUD, { AmbientBackground } from '@/components/AnalysisHUD'
 
 // Bookmarklet — runs on linkedin.com, scrolls/expands profile, opens MPC in new tab,
 // sends profile text via postMessage (bypasses CSP/CORS entirely).
@@ -311,16 +311,19 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-[#0a0a0f] text-white relative">
+
+      {/* Ambient 3D mesh background — always visible, muted */}
+      <AmbientBackground />
 
       {/* NAV */}
       <Nav showHomeLinks />
 
       {/* HERO */}
       <section
-        className="min-h-screen flex items-center pt-16"
+        className="relative z-10 min-h-screen flex items-center pt-16"
         style={{
-          background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.25) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 80% 80%, rgba(139,92,246,0.1) 0%, transparent 60%), #0a0a0f',
+          background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.25) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 80% 80%, rgba(139,92,246,0.1) 0%, transparent 60%)',
         }}
       >
         <div className="max-w-6xl mx-auto px-6 py-24 grid lg:grid-cols-2 gap-16 items-center w-full">
@@ -373,7 +376,7 @@ export default function HomePage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how-it-works" className="py-24 px-6 border-t border-white/5">
+      <section id="how-it-works" className="relative z-10 py-24 px-6 border-t border-white/5">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-3">From invisible to in-demand — in 15 minutes</h2>
@@ -419,7 +422,7 @@ export default function HomePage() {
       </section>
 
       {/* SOCIAL PROOF */}
-      <section className="py-16 px-6 border-t border-white/5 bg-white/[0.01]">
+      <section className="relative z-10 py-16 px-6 border-t border-white/5 bg-white/[0.01]">
         <div className="max-w-5xl mx-auto">
           <p className="text-center text-slate-500 text-sm mb-10">People who optimized their profile</p>
           <div className="grid sm:grid-cols-3 gap-6">
@@ -439,7 +442,7 @@ export default function HomePage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="py-24 px-6 border-t border-white/5">
+      <section id="pricing" className="relative z-10 py-24 px-6 border-t border-white/5">
         <div className="max-w-md mx-auto text-center">
           <h2 className="text-3xl font-bold mb-3">One plan. Full access.</h2>
           <p className="text-slate-400 mb-12">Cancel any time. No hidden fees.</p>
@@ -475,7 +478,7 @@ export default function HomePage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-white/5 py-8 px-6 text-center text-xs text-slate-600">
+      <footer className="relative z-10 border-t border-white/5 py-8 px-6 text-center text-xs text-slate-600">
         My Profile Coach · © 2026 · myprofilecoach.com
       </footer>
 
