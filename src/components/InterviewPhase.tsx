@@ -31,9 +31,16 @@ export default function InterviewPhase({ questions, sessionId, onStartTransition
     if (isLast) {
       submitAnswers({ ...answers, [currentIndex]: currentAnswer.trim() })
     } else {
+      setAnswers((prev) => ({ ...prev, [currentIndex]: currentAnswer.trim() }))
       setCurrentIndex((i) => i + 1)
-      setCurrentAnswer('')
+      setCurrentAnswer(answers[currentIndex + 1] ?? '')
     }
+  }
+
+  function handleBack() {
+    setAnswers((prev) => currentAnswer.trim() ? { ...prev, [currentIndex]: currentAnswer.trim() } : prev)
+    setCurrentIndex((i) => i - 1)
+    setCurrentAnswer(answers[currentIndex - 1] ?? '')
   }
 
   function handleSkip() {
@@ -41,7 +48,7 @@ export default function InterviewPhase({ questions, sessionId, onStartTransition
       submitAnswers(answers)
     } else {
       setCurrentIndex((i) => i + 1)
-      setCurrentAnswer('')
+      setCurrentAnswer(answers[currentIndex + 1] ?? '')
     }
   }
 
@@ -138,12 +145,24 @@ export default function InterviewPhase({ questions, sessionId, onStartTransition
 
             {/* Actions */}
             <div className="flex items-center justify-between pt-2">
-              <button
-                onClick={handleSkip}
-                className="text-sm text-slate-500 hover:text-slate-300 transition-colors underline underline-offset-2"
-              >
-                Skip this one
-              </button>
+              <div className="flex items-center gap-4">
+                {currentIndex > 0 && (
+                  <button
+                    onClick={handleBack}
+                    className="text-sm text-slate-500 hover:text-slate-300 transition-colors underline underline-offset-2"
+                  >
+                    ← Back
+                  </button>
+                )}
+                {!isLast && (
+                  <button
+                    onClick={handleSkip}
+                    className="text-sm text-slate-500 hover:text-slate-300 transition-colors underline underline-offset-2"
+                  >
+                    Skip this one
+                  </button>
+                )}
+              </div>
               <Button
                 onClick={handleNext}
                 className="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-xl px-6"
