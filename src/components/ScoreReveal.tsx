@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import type { ProfileScore, ParsedRole } from '@/lib/types'
+import type { ProfileScore, ParsedRole, SessionState } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +12,7 @@ interface Props {
   sessionId: string
   keywords: string[]
   parsedRoles?: ParsedRole[]
+  onSessionUpdate?: (session: SessionState) => void
 }
 
 function AnimatedScore({ target }: { target: number }) {
@@ -62,8 +62,7 @@ function ScoreBar({ label, value, max }: { label: string; value: number; max: nu
 }
 
 
-export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = [] }: Props) {
-  const router = useRouter()
+export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = [], onSessionUpdate }: Props) {
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [email, setEmail] = useState('')
   const [showEmailInput, setShowEmailInput] = useState(false)
@@ -125,8 +124,14 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
         const data = await res.json().catch(() => ({}))
         throw new Error((data as { error?: string }).error ?? 'Failed to start interview')
       }
-      router.push(`/session/${sessionId}`)
-      router.refresh()
+      // Fetch the updated session and push it directly into state
+      // This avoids the race condition where router.refresh() re-renders
+      // before polling picks up the new stage
+      const sessionRes = await fetch(`/api/session/${sessionId}`, { cache: 'no-store' })
+      if (sessionRes.ok && onSessionUpdate) {
+        const updated = await sessionRes.json()
+        onSessionUpdate(updated)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start interview')
       setInterviewLoading(false)

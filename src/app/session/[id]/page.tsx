@@ -132,7 +132,7 @@ export default function SessionPage() {
   let content: React.ReactNode
 
   if (stage === 'scored' && session.score) {
-    content = <ScoreReveal score={session.score} sessionId={session.id} keywords={session.keywords ?? []} parsedRoles={session.parsedProfile?.roles ?? []} />
+    content = <ScoreReveal score={session.score} sessionId={session.id} keywords={session.keywords ?? []} parsedRoles={session.parsedProfile?.roles ?? []} onSessionUpdate={setSession} />
   } else if ((stage === 'interviewing' || stage === 'answering') && session.interviewQuestions) {
     content = <InterviewPhase questions={session.interviewQuestions} sessionId={session.id} />
   } else if ((stage === 'suggestions' || stage === 'reviewing') && session.suggestionCards) {
