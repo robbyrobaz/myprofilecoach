@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  allowedDevOrigins: ['omen-claw.tail76e7df.ts.net'],
 };
 
 export default nextConfig;
