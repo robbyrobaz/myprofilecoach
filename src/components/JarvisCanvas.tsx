@@ -113,7 +113,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
       const color = new THREE.Color()
       for (let i = 0; i < COUNT; i++) {
         const pulse = 0.8 + Math.sin(t * (2 + I * 2) + i * 0.7) * 0.4
-        const scale = (0.06 + pulse * 0.015) * (0.7 + I * 0.5)
+        const scale = (0.025 + pulse * 0.008) * (0.7 + I * 0.5)
         dummy.position.copy(nodeData[i])
         dummy.scale.setScalar(scale)
         dummy.updateMatrix()
