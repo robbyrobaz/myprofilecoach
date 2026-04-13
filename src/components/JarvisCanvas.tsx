@@ -113,7 +113,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
       const color = new THREE.Color()
       for (let i = 0; i < COUNT; i++) {
         const pulse = 0.8 + Math.sin(t * (2 + I * 2) + i * 0.7) * 0.4
-        const scale = (0.025 + pulse * 0.008) * (0.7 + I * 0.5)
+        const scale = (0.012 + pulse * 0.004) * (0.7 + I * 0.5)
         dummy.position.copy(nodeData[i])
         dummy.scale.setScalar(scale)
         dummy.updateMatrix()
@@ -202,7 +202,7 @@ function NodeNetwork({ mouseRef, intensityRef }: {
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[particlePositions, 3]} count={PARTICLE_COUNT} />
         </bufferGeometry>
-        <pointsMaterial size={0.03} color="#67e8f9" transparent opacity={0.3} blending={THREE.AdditiveBlending} sizeAttenuation />
+        <pointsMaterial size={0.008} color="#67e8f9" transparent opacity={0.15} blending={THREE.AdditiveBlending} sizeAttenuation />
       </points>
     </group>
   )
