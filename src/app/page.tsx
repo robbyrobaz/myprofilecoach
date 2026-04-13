@@ -310,11 +310,9 @@ function ScoreCard() {
 export default function HomePage() {
   const { state: jarvisState } = useJarvis()
 
-  // Hide all page content when Jarvis is active (AI is working)
-  if (jarvisState.mode === 'active') return null
-
+  // Hide page content (but don't unmount) when Jarvis is active so in-flight fetches complete
   return (
-    <div className="min-h-screen text-white relative">
+    <div className={`min-h-screen text-white relative ${jarvisState.mode === 'active' ? 'invisible' : ''}`}>
 
       {/* NAV */}
       <Nav showHomeLinks />
