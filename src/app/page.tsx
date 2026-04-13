@@ -59,7 +59,7 @@ function BookmarkletHelper() {
 type InputMode = 'url' | 'paste'
 
 function HeroForm() {
-  const { activate } = useJarvis()
+  const { activate, deactivate } = useJarvis()
   const router = useRouter()
   const [mode, setMode] = useState<InputMode>('url')
   const [linkedinUrl, setLinkedinUrl] = useState('')
@@ -126,6 +126,7 @@ function HeroForm() {
         setMode('paste')
         setError("LinkedIn requires login to view this profile — we can't fetch it automatically. Open LinkedIn, go to the profile, select all text (Ctrl+A / Cmd+A), copy, and paste it below.")
         setLoading(false)
+        deactivate()
         return
       }
     } else {
@@ -157,6 +158,8 @@ function HeroForm() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setScoring(false)
+      setLoading(false)
+      deactivate()
     }
   }
 
@@ -305,6 +308,11 @@ function ScoreCard() {
 }
 
 export default function HomePage() {
+  const { state: jarvisState } = useJarvis()
+
+  // Hide all page content when Jarvis is active (AI is working)
+  if (jarvisState.mode === 'active') return null
+
   return (
     <div className="min-h-screen text-white relative">
 
