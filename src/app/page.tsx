@@ -58,7 +58,7 @@ function BookmarkletHelper() {
 
 type InputMode = 'url' | 'paste'
 
-function HeroForm() {
+function HeroForm({ onAnalyzing }: { onAnalyzing: (role: string) => void }) {
   const router = useRouter()
   const [mode, setMode] = useState<InputMode>('url')
   const [linkedinUrl, setLinkedinUrl] = useState('')
@@ -106,6 +106,7 @@ function HeroForm() {
     if (mode === 'url') {
       if (!linkedinUrl.trim()) { setError('Please enter your LinkedIn profile URL.'); return }
       if (!targetRole.trim()) { setError('Please enter a target role.'); return }
+      onAnalyzing(targetRole)
       setLoading(true)
       setLoadingMsg('Fetching your LinkedIn profile...')
       try {
@@ -129,6 +130,7 @@ function HeroForm() {
     } else {
       if (!profileText.trim()) { setError('Please paste your LinkedIn profile text.'); return }
       if (!targetRole.trim()) { setError('Please enter a target role.'); return }
+      onAnalyzing(targetRole)
       setLoading(true)
     }
 
@@ -158,8 +160,6 @@ function HeroForm() {
   }
 
   return (
-    <>
-    {(loading || scoring) && <AnalysisHUD targetRole={targetRole || 'your target role'} />}
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Mode toggle */}
       <div className="flex rounded-lg border border-white/10 overflow-hidden">
@@ -255,7 +255,6 @@ function HeroForm() {
       </Button>
       <p className="text-xs text-center text-slate-500">No account required. Free score in 30 seconds.</p>
     </form>
-    </>
   )
 }
 
@@ -305,6 +304,12 @@ function ScoreCard() {
 }
 
 export default function HomePage() {
+  const [analyzingRole, setAnalyzingRole] = useState<string | null>(null)
+
+  if (analyzingRole) {
+    return <AnalysisHUD targetRole={analyzingRole} />
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
 
@@ -337,7 +342,7 @@ export default function HomePage() {
 
             {/* Form */}
             <div id="score-form" className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-6">
-              <HeroForm />
+              <HeroForm onAnalyzing={(role) => setAnalyzingRole(role)} />
             </div>
 
             <div className="flex items-center gap-6 mt-10">
