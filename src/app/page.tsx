@@ -321,6 +321,16 @@ function ScoreCard() {
 export default function HomePage() {
   const { state: jarvisState } = useJarvis()
 
+  // Capture ?access=CODE on landing and persist to localStorage
+  useEffect(() => {
+    const validCodes = (process.env.NEXT_PUBLIC_ACCESS_CODES ?? '').split(',').map(s => s.trim()).filter(Boolean)
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('access')
+    if (code && validCodes.includes(code)) {
+      localStorage.setItem('mpc_subscribed', 'true')
+    }
+  }, [])
+
   // Hide page content (but don't unmount) when Jarvis is active so in-flight fetches complete
   return (
     <div className={`min-h-screen text-white relative ${jarvisState.mode === 'active' ? 'invisible' : ''}`}>

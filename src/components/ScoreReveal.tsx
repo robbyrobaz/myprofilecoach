@@ -71,12 +71,15 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
   const [error, setError] = useState('')
 
   useEffect(() => {
-    // BYPASS_AUTH env var or ?bypass=true in URL skips paywall for testing
+    // Global bypass via env var (dev/testing)
     if (process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true') {
       localStorage.setItem('mpc_subscribed', 'true')
     }
+    // Secret access code — ?access=CODE grants free access and persists in localStorage
+    const validCodes = (process.env.NEXT_PUBLIC_ACCESS_CODES ?? '').split(',').map(s => s.trim()).filter(Boolean)
     const params = new URLSearchParams(window.location.search)
-    if (params.get('bypass') === 'true') {
+    const code = params.get('access')
+    if (code && validCodes.includes(code)) {
       localStorage.setItem('mpc_subscribed', 'true')
     }
     const stored = localStorage.getItem('mpc_subscribed')
