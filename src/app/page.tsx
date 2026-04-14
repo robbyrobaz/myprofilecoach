@@ -165,6 +165,7 @@ function HeroForm() {
         throw new Error(data?.error ?? 'Failed to score profile')
       }
       const data = (await res.json()) as { sessionId: string }
+      localStorage.setItem('mpc_last_session', JSON.stringify({ id: data.sessionId, ts: Date.now() }))
       router.push(`/session/${data.sessionId}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
@@ -318,6 +319,42 @@ function ScoreCard() {
   )
 }
 
+function ResumeSessionBanner() {
+  const [sessionId, setSessionId] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('mpc_last_session')
+      if (!raw) return
+      const { id, ts } = JSON.parse(raw) as { id: string; ts: number }
+      // Sessions expire after 24h in Redis
+      if (Date.now() - ts < 23 * 60 * 60 * 1000) setSessionId(id)
+    } catch { /* ignore */ }
+  }, [])
+
+  if (!sessionId) return null
+
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-2xl border border-cyan-500/30 bg-slate-900/90 backdrop-blur-md px-5 py-3 shadow-xl shadow-black/40">
+      <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse flex-shrink-0" />
+      <span className="text-sm text-slate-300">You have an active session</span>
+      <a
+        href={`/session/${sessionId}`}
+        className="text-sm font-semibold text-cyan-400 hover:text-cyan-300 transition-colors"
+      >
+        Resume →
+      </a>
+      <button
+        onClick={() => { localStorage.removeItem('mpc_last_session'); setSessionId(null) }}
+        className="text-slate-600 hover:text-slate-400 text-lg leading-none ml-1"
+        aria-label="Dismiss"
+      >
+        ×
+      </button>
+    </div>
+  )
+}
+
 export default function HomePage() {
   const { state: jarvisState } = useJarvis()
 
@@ -333,6 +370,7 @@ export default function HomePage() {
   // Hide page content (but don't unmount) when Jarvis is active so in-flight fetches complete
   return (
     <div className={`min-h-screen text-white relative ${jarvisState.mode === 'active' ? 'invisible' : ''}`}>
+      <ResumeSessionBanner />
 
       {/* NAV */}
       <Nav showHomeLinks />
