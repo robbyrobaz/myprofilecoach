@@ -265,10 +265,10 @@ function HeroForm() {
             {loadingMsg}
           </span>
         ) : (
-          'Score my profile free →'
+          'Get My Free Profile Score'
         )}
       </Button>
-      <p className="text-xs text-center text-slate-500">No account required. Free score in 30 seconds.</p>
+      <p className="text-xs text-center text-slate-500">Works with public or private profiles • Takes ~30 seconds • No login required</p>
     </form>
   )
 }
@@ -343,13 +343,13 @@ export default function HomePage() {
               Free profile score in 30 seconds
             </div>
             <h1 className="text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight mb-6">
-              Recruiters use AI<br />to find candidates.<br />
+              Recruiters use AI<br />to decide who gets seen.<br />
               <span style={{ background: 'linear-gradient(135deg, #67e8f9 0%, #06b6d4 40%, #22d3ee 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Use AI to be found.
+                Use AI to make sure they see you.
               </span>
             </h1>
             <p className="text-lg text-slate-400 mb-10 leading-relaxed max-w-lg">
-              Paste your LinkedIn profile and get an instant AI score. Then let AI interview you and rewrite every section — headline, about, every role bullet — in under 15 minutes.
+              Just paste your LinkedIn profile URL (linkedin.com/in/yourname) and get an instant AI Visibility Score in seconds. Our AI will analyze your full profile, show you exactly how it performs with recruiter tools, and then offer to interview you and optimize every section.
             </p>
 
             {/* Form */}
