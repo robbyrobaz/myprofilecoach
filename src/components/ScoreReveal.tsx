@@ -119,8 +119,6 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
     }
     setInterviewLoading(true)
     setError('')
-    // Pause polling and activate Jarvis BEFORE the API call
-    onStartTransition?.('interviewing', 'Preparing Interview', 15000)
     try {
       const res = await fetch('/api/interview', {
         method: 'POST',
@@ -129,11 +127,15 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error((data as { error?: string }).error ?? 'Failed to start interview')
+        const msg = (data as { error?: string }).error ?? 'Failed to start interview'
+        // 403 usually means subscription not yet activated (webhook delay) — give a helpful message
+        if (res.status === 403) {
+          throw new Error(`Payment processing — please wait 30 seconds and try again. If this persists, email rob@myprofilecoach.com with your receipt. (${msg})`)
+        }
+        throw new Error(msg)
       }
-      // Fetch the updated session and push it directly into state
-      // This avoids the race condition where router.refresh() re-renders
-      // before polling picks up the new stage
+      // API succeeded — now activate Jarvis and fetch updated session
+      onStartTransition?.('interviewing', 'Preparing Interview', 15000)
       const sessionRes = await fetch(`/api/session/${sessionId}`, { cache: 'no-store' })
       if (sessionRes.ok && onSessionUpdate) {
         const updated = await sessionRes.json()
