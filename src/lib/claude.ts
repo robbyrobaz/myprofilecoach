@@ -45,9 +45,9 @@ Always respond in valid JSON unless explicitly told otherwise. Be specific, not 
 function jsonResponse<T>(text: string): T {
   // Try multiple extraction strategies in order of reliability
   // 1. Greedy backtick match (handles ``` inside JSON values)
-  const greedyFence = text.match(/```json\n?([\s\S]*)```\s*$/)
+  const greedyFence = text.match(/```(?:json)?\s*([\s\S]*)```\s*$/)
   // 2. Non-greedy backtick match (original approach)
-  const lazyFence = text.match(/```json\n?([\s\S]*?)\n?```/)
+  const lazyFence = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
   // 3. Raw JSON object or array
   const rawJson = text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/)
 
