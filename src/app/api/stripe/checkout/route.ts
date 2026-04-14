@@ -29,10 +29,11 @@ export async function POST(request: NextRequest) {
     const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
     const appUrl = process.env.NEXT_PUBLIC_URL ?? vercelUrl ?? 'http://localhost:3000'
 
-    // After payment, redirect back to the session so the flow continues
+    // After payment, redirect back to the session so the flow continues.
+    // {CHECKOUT_SESSION_ID} is a Stripe template variable substituted at redirect time.
     const successUrl = sessionId
-      ? `${appUrl}/session/${sessionId}?paid=true`
-      : `${appUrl}/?payment=success`
+      ? `${appUrl}/session/${sessionId}?paid=true&cs={CHECKOUT_SESSION_ID}`
+      : `${appUrl}/?payment=success&cs={CHECKOUT_SESSION_ID}`
     const cancelUrl = sessionId
       ? `${appUrl}/session/${sessionId}`
       : `${appUrl}/`

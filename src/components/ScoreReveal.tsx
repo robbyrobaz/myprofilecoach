@@ -128,9 +128,38 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         const msg = (data as { error?: string }).error ?? 'Failed to start interview'
-        // 403 usually means subscription not yet activated (webhook delay) — give a helpful message
         if (res.status === 403) {
-          throw new Error(`Payment processing — please wait 30 seconds and try again. If this persists, email rob@myprofilecoach.com with your receipt. (${msg})`)
+          // Subscription not yet activated. Try to verify payment directly
+          // (catches the race where the user clicks before verify-payment finishes).
+          const cs = new URLSearchParams(window.location.search).get('cs')
+          if (cs?.startsWith('cs_')) {
+            const verifyRes = await fetch('/api/stripe/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ checkoutSessionId: cs }),
+            })
+            if (verifyRes.ok) {
+              const v = await verifyRes.json() as { activated?: boolean }
+              if (v.activated) {
+                // Retry the interview call now that the user is activated
+                const retry = await fetch('/api/interview', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ sessionId, userEmail }),
+                })
+                if (retry.ok) {
+                  onStartTransition?.('interviewing', 'Preparing Interview', 15000)
+                  const sessionRes = await fetch(`/api/session/${sessionId}`, { cache: 'no-store' })
+                  if (sessionRes.ok && onSessionUpdate) {
+                    const updated = await sessionRes.json()
+                    onSessionUpdate(updated)
+                  }
+                  return
+                }
+              }
+            }
+          }
+          throw new Error('Payment processing — please wait a moment and try again. If this persists, email rob@myprofilecoach.com with your receipt.')
         }
         throw new Error(msg)
       }

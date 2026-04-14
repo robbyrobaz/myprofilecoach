@@ -13,9 +13,19 @@ import { useJarvis } from '@/components/JarvisContext'
 function PaidDetector() {
   const searchParams = useSearchParams()
   useEffect(() => {
-    if (searchParams.get('paid') === 'true') {
-      localStorage.setItem('mpc_subscribed', 'true')
-    }
+    if (searchParams.get('paid') !== 'true') return
+    localStorage.setItem('mpc_subscribed', 'true')
+
+    // Verify payment directly with Stripe so the user is activated immediately
+    // without depending on webhooks. cs= is the Stripe checkout session ID.
+    const cs = searchParams.get('cs')
+    if (!cs || !cs.startsWith('cs_')) return
+
+    fetch('/api/stripe/verify-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ checkoutSessionId: cs }),
+    }).catch(() => { /* silent — webhook will cover it */ })
   }, [searchParams])
   return null
 }
