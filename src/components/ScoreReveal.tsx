@@ -76,10 +76,9 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
       localStorage.setItem('mpc_subscribed', 'true')
     }
     // Secret access code — ?access=CODE grants free access and persists in localStorage
-    const validCodes = (process.env.NEXT_PUBLIC_ACCESS_CODES ?? '').split(',').map(s => s.trim()).filter(Boolean)
     const params = new URLSearchParams(window.location.search)
     const code = params.get('access')
-    if (code && validCodes.includes(code)) {
+    if (code === 'robs-friends') {
       localStorage.setItem('mpc_subscribed', 'true')
     }
     const stored = localStorage.getItem('mpc_subscribed')

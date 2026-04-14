@@ -323,10 +323,9 @@ export default function HomePage() {
 
   // Capture ?access=CODE on landing and persist to localStorage
   useEffect(() => {
-    const validCodes = (process.env.NEXT_PUBLIC_ACCESS_CODES ?? '').split(',').map(s => s.trim()).filter(Boolean)
     const params = new URLSearchParams(window.location.search)
     const code = params.get('access')
-    if (code && validCodes.includes(code)) {
+    if (code === 'robs-friends') {
       localStorage.setItem('mpc_subscribed', 'true')
     }
   }, [])
