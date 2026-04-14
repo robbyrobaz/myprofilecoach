@@ -84,7 +84,24 @@ export default function ScoreReveal({ score, sessionId, keywords, parsedRoles = 
     const stored = localStorage.getItem('mpc_subscribed')
     if (stored === 'true') setIsSubscribed(true)
     const storedEmail = localStorage.getItem('mpc_email')
-    if (storedEmail) setEmail(storedEmail)
+    if (storedEmail) {
+      setEmail(storedEmail)
+      // Verify subscription server-side — catches returning subscribers on new devices
+      // or when localStorage was cleared
+      fetch('/api/check-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: storedEmail }),
+      })
+        .then(r => r.json())
+        .then((d: { active?: boolean }) => {
+          if (d.active) {
+            localStorage.setItem('mpc_subscribed', 'true')
+            setIsSubscribed(true)
+          }
+        })
+        .catch(() => { /* non-critical */ })
+    }
   }, [])
 
   async function handleCheckout() {
